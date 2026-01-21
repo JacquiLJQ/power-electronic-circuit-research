@@ -1,35 +1,36 @@
-from PyLTSpice import SimCommander, RawRead
+# from PyLTSpice import SimCommander, RawRead
 import os
 import matplotlib.pyplot as plt
 import glob
 
+
 class NetList:
 
     # Make a new Netlist and name it using the date and time
-    def __init__(self, fileName = "default_netlist"):
+    def __init__(self, fileName="default_netlist"):
         self.netlist = fileName
 
         # Variable to keep track of number of extra drivers automatically added
         self.driver_node_count = 1
 
         # Clean up old files
-        ext = self.netlist+"_1.*"
+        ext = self.netlist + "_1.*"
         for f in glob.glob(ext):
             os.remove(f)
-            
-        ext2 = self.netlist+".*"
+
+        ext2 = self.netlist + ".*"
         for f in glob.glob(ext2):
             os.remove(f)
 
-        file = open(self.netlist+".net","w")
+        file = open(self.netlist + ".net", "w")
         file.close()
-    
+
     # Generate the netlist from matrix representation of circuit
     # con_matrix: connection matrix (list)
     # dev_matrix: device matrix (list)
     #
     # Connection Matrix format:
-    #   Device 1: {1 0 2 ... }
+    #   Device 1: {1 0 2 ... }netlistmaker/pngfile/pwm/pwm/35.png
     #   Device 2: {0 2 0 ... }
     #   Device 3: {2 1 0 ... }
     #   Device 4: {0 3 1 ... }
@@ -69,7 +70,7 @@ class NetList:
         # Get total number of devices
         total_devices = len(con_matrix)
 
-        if (total_devices == 0):
+        if total_devices == 0:
             raise Exception("Empty connection matrix")
 
         # Get total number of nodes
@@ -85,16 +86,16 @@ class NetList:
             # If first time seeing device
             if x not in self.components.keys():
                 self.components[x] = 0
-            
+
             # Increment component count, add it to running command list
             self.components[x] = self.components[x] + 1
-            temp = x + str(self.components[x]) + ' '
+            temp = x + str(self.components[x]) + " "
 
-            if ((x == 'V') and (self.components[x] == 1)):
-                self.traces_in.append("V("+str(con_matrix[i].index(1))+")")
-            
-            if ((x == 'R') and (self.components[x] == 1)):
-                self.traces_out.append("V("+str(con_matrix[i].index(1))+")")
+            if (x == "V") and (self.components[x] == 1):
+                self.traces_in.append("V(" + str(con_matrix[i].index(1)) + ")")
+
+            if (x == "R") and (self.components[x] == 1):
+                self.traces_out.append("V(" + str(con_matrix[i].index(1)) + ")")
 
             # Make the device connections
             j = 0
@@ -105,42 +106,44 @@ class NetList:
                 # Use try/except because components may have a varying number of pins
                 try:
                     node = con_matrix[i].index(j)
-                    
+
                     # Corner case: MOSFET bulk connection
-                    if (j == 3 and x == "M"):
+                    if j == 3 and x == "M":
                         node = str(node) + " " + str(node)
 
                     # If a pin needs to be driven, chances are it's a MOSFET, so add appropriate driver
-                    if (node == total_nodes-1):
+                    if node == total_nodes - 1:
                         delay, offtime, period = param[self.param_ptr]
                         self.param_ptr += 1
-                        node, output = self.makeDriver(con_matrix[i].index(j+1), delay, offtime, period)
+                        node, output = self.makeDriver(
+                            con_matrix[i].index(j + 1), delay, offtime, period
+                        )
                         drivers.append(output)
 
-                    temp = temp + str(node) + ' '
+                    temp = temp + str(node) + " "
                 except ValueError:
                     break
-        
+
             # Check if there are diodes or mosfets
-            if (x == 'M'):
+            if x == "M":
                 self.add_mosfet = True
-                temp = temp + "mosfet"  
-            elif (x == 'D'):
+                temp = temp + "mosfet"
+            elif x == "D":
                 self.add_diode = True
                 temp = temp + "diode"
             else:
                 # Add component values, for now use default values
-                if (x == 'V'):
+                if x == "V":
                     temp = temp + "5"
-                elif (x == 'R'):
+                elif x == "R":
                     temp = temp + "10"
-                elif (x == 'L'):
+                elif x == "L":
                     temp = temp + "10u"
-                elif (x == 'C'):
+                elif x == "C":
                     temp = temp + "100u"
 
             # Determine if source. 0 means no, 1 means yes
-            if ((x == 'V') or (x == 'A')):
+            if (x == "V") or (x == "A"):
                 sources.append(temp)
             else:
                 comp.append(temp)
@@ -159,56 +162,63 @@ class NetList:
         # If first time seeing Vdrv
         if "Vdrv" not in self.components.keys():
             self.components["Vdrv"] = 0
-        
+
         # Increment component count, add it to running command list
         self.components["Vdrv"] = self.components["Vdrv"] + 1
 
         # Create pulse command
-        pulse = "PULSE(20 0 0 0 0 {Ton} {Tperiod})".format\
-            (Ton = offtime, Tperiod = period)
+        pulse = "PULSE(20 0 0 0 0 {Ton} {Tperiod})".format(Ton=offtime, Tperiod=period)
 
         # Assemble command
-        stub = "Vdrv" + str(self.components["Vdrv"]) + " p" + str(d_count) + " " + str(ref) + " " + pulse
+        stub = (
+            "Vdrv"
+            + str(self.components["Vdrv"])
+            + " p"
+            + str(d_count)
+            + " "
+            + str(ref)
+            + " "
+            + pulse
+        )
 
-        return "p"+str(d_count), stub
-    
+        return "p" + str(d_count), stub
+
     # Write the cmds to the netlist
     def writeNet(self, comp, sources, drivers, param, time):
-        n_file = open(self.netlist+".net", 'w')
+        n_file = open(self.netlist + ".net", "w")
 
         len_comp = len(comp)
         len_sources = len(sources)
         len_drivers = len(drivers)
 
         # Print a little comment
-        print(self.writeNewSection("Netlist for "+self.netlist+".net"), file=n_file)
+        print(self.writeNewSection("Netlist for " + self.netlist + ".net"), file=n_file)
 
         # Loop through sources list and write to .net file
-        if (len_sources > 0):
+        if len_sources > 0:
             print(self.writeNewSection("Sources:", True), file=n_file)
             for x in range(len_sources):
                 print(sources[x], file=n_file)
 
         # Loop through component list and write to .net file
-        if (len_comp > 0):
+        if len_comp > 0:
             print(self.writeNewSection("Components:", True), file=n_file)
             for x in range(len_comp):
                 print(comp[x], file=n_file)
 
         # Loop through driver list and write to .net file
-        if (len_drivers > 0):
+        if len_drivers > 0:
             print(self.writeNewSection("Drivers:", True), file=n_file)
             for x in range(len_drivers):
                 print(drivers[x], file=n_file)
 
         # Add MOSFET and Diode models if necessary
-        if ((self.add_mosfet or self.add_diode) == True):
+        if (self.add_mosfet or self.add_diode) == True:
             print(self.writeNewSection("Models:", True), file=n_file)
-            if (self.add_mosfet == True):
+            if self.add_mosfet == True:
                 print(".model mosfet NMOS(Kp=60 Vto=4.5)", file=n_file)
-            if (self.add_diode == True):
+            if self.add_diode == True:
                 print(".model diode D", file=n_file)
-
 
         # Simulation cmd
         print("\n.tran " + time, file=n_file)
@@ -223,21 +233,21 @@ class NetList:
     def writeNewSection(self, comment="", newline=False):
         string = ""
         # Print a newline
-        if (newline == True):
+        if newline == True:
             string = string + "\n"
-        
+
         # Print a line comment
         string = string + "* " + comment
-        
+
         return string
 
     # Run LTSpice simulation
     def run(self):
         # Get current working directory
         meAbsPath = os.path.dirname(os.path.realpath(__file__))
-        
+
         # Set up LTSpice and run simulation
-        LTC = SimCommander(meAbsPath + "/" + self.netlist + ".net")  
+        LTC = SimCommander(meAbsPath + "/" + self.netlist + ".net")
         LTC.run()
         LTC.wait_completion()
 
@@ -249,15 +259,31 @@ class NetList:
 
     # Plot all the values grabbed
     def plot(self):
-        t = self.rawfile.get_trace('time')
+        t = self.rawfile.get_trace("time")
         steps = self.rawfile.get_steps()
 
-        #self.traces=['V(3)', 'V(2)']
+        # self.traces=['V(3)', 'V(2)']
 
         for step in range(len(steps)):
-                plt.plot(t.get_wave(step), self.rawfile.get_trace(self.traces_in[0]).get_wave(step), label="Vin")
-                plt.plot(t.get_wave(step), (self.rawfile.get_trace(self.traces_out[0]).get_wave(step)), label="Vout")
-                plt.plot(t.get_wave(step), (self.rawfile.get_trace("V(2)").get_wave(step)), label="Vsw")
-                plt.plot(t.get_wave(step), (self.rawfile.get_trace("V(p1)").get_wave(step)), label="Vgate")
+            plt.plot(
+                t.get_wave(step),
+                self.rawfile.get_trace(self.traces_in[0]).get_wave(step),
+                label="Vin",
+            )
+            plt.plot(
+                t.get_wave(step),
+                (self.rawfile.get_trace(self.traces_out[0]).get_wave(step)),
+                label="Vout",
+            )
+            plt.plot(
+                t.get_wave(step),
+                (self.rawfile.get_trace("V(2)").get_wave(step)),
+                label="Vsw",
+            )
+            plt.plot(
+                t.get_wave(step),
+                (self.rawfile.get_trace("V(p1)").get_wave(step)),
+                label="Vgate",
+            )
         plt.legend()
         plt.show()
