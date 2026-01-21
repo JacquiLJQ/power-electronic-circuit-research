@@ -1,0 +1,27 @@
+* Netlist for test_35.net
+
+* Components:
+D1 1 4 diode
+M1 3 p1 1 1 mosfet
+D2 3 0 diode
+C1 11 1 100u
+D3 9 10 diode
+L1 7 0 10u
+X1 7 0 
+L2 8 10 10u
+L3 9 6 10u
+D4 10 9 diode
+D5 7 diode
+M2 11 p2 4 4 mosfet
+
+* Drivers:
+Vdrv1 p1 1 PULSE(20 0 0 0 0 3u 10u)
+Vdrv2 p2 4 PULSE(20 0 0 0 0 3u 10u)
+
+* Models:
+.model mosfet NMOS(Kp=60 Vto=4.5)
+.model diode D
+
+.tran 100u
+
+.end

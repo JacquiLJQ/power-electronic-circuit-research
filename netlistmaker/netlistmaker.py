@@ -1,4 +1,4 @@
-from netlistbuilder import NetList
+# from netlistbuilder import NetList
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,6 +12,29 @@ import random
 import glob
 from os import listdir
 from os.path import isfile, join
+from pathlib import Path
+
+
+DEBUG_ROOT = Path("./pngfile/pwm/debug_vis")  # 相对 netlistmaker/ 目录
+DEBUG_ROOT.mkdir(exist_ok=True)
+
+
+def save_debug(fig_name, img, sche_path):
+    """
+    fig_name: str, e.g. '01_input', '03_skeleton'
+    img: numpy array
+    sche_path: original png path
+    """
+    stem = Path(sche_path).stem  # 60, 2, 56, ...
+    out_dir = DEBUG_ROOT / stem
+    out_dir.mkdir(exist_ok=True)
+
+    out_path = out_dir / f"{fig_name}.png"
+    plt.figure(figsize=(6, 6))
+    plt.imshow(img, cmap="gray")
+    plt.axis("off")
+    plt.savefig(out_path, dpi=200, bbox_inches="tight")
+    plt.close()
 
 
 # ------------------------ Step 1: Image processing -----------------
@@ -78,8 +101,7 @@ def img_proc(leimg):
     # Uncomment both lines to see the image
     # Image must be closed for program to continue
 
-    # plt.imshow(img_norm)
-    # plt.show()
+    save_debug("normalized_thresholded_image", img_norm, leimg)
 
     return img_norm, img_tres
 
@@ -123,7 +145,7 @@ def cleancomp(components, SE):
 
 
 # Main image finding method
-def find_all(img_norm):
+def find_all(img_norm, sche):
     # morphological skeletonization
     img_skel = morphology.skeletonize(img_norm)
     # img_skel is the new core image for processing, normalized
@@ -151,8 +173,7 @@ def find_all(img_norm):
     # Uncomment both lines to see the image
     # Image must be closed for program to continue
 
-    # plt.imshow(img_boxes)
-    # plt.show()
+    save_debug("bounding_boxes_around_blob", img_boxes, sche)
 
     return img_skel, components
 
@@ -160,7 +181,7 @@ def find_all(img_norm):
 # ------------------ Step 3: CNN ------------------------------------
 # Helper function to initialize/load CNN
 def init_model(MODEL_PATH):
-    model = tf.keras.models.load_model(MODEL_PATH)
+    model = tf.keras.models.load_model(MODEL_PATH, compile=False)
     return model
 
 
@@ -339,6 +360,7 @@ def get_orientation(device, img, focus):
             comp = "C"
         else:
             comp = "X"
+            print("the devide is ", device)
 
         # If there are pixels running off the frame, note where
         # and those locations will tell you the orientation.
@@ -427,7 +449,7 @@ def predict_components(img_skel: np.array, components, model):
     return component_list
 
 
-def classify(img_norm, img_skel, components, model_path):
+def classify(img_norm, img_skel, components, model_path, sche):
     # initialize CNN
     model = init_model(model_path)
 
@@ -463,15 +485,14 @@ def classify(img_norm, img_skel, components, model_path):
     # Uncomment both lines to see the image
     # Image must be closed for program to continue
 
-    # plt.imshow(img)
-    # plt.show()
+    save_debug("contour_img", img, sche)
 
     return predictions
 
 
 # ------------------------ Step 4: Identify nodes -------------------
 # Finds and visualizes nodes
-def node_detect(img_tres, predictions):
+def node_detect(img_tres, predictions, sche):
     img_nodes = np.copy(cv2.bitwise_not(img_tres))
 
     for _, square in enumerate(predictions):
@@ -501,8 +522,7 @@ def node_detect(img_tres, predictions):
     # Uncomment both lines to see the image
     # Image must be closed for program to continue
 
-    # plt.imshow(img_nodes_rect)
-    # plt.show()
+    save_debug("node_contour_img", img_nodes, sche)
 
     return img_nodes_dilate
 
@@ -696,15 +716,15 @@ class NumpyEncoder(json.JSONEncoder):
 def main():
     # read all file names in the same folder
     # files = [f for f in os.listdir("./examples")]
-    files = glob.glob("schematic/pwm/nonpwm/*.png")
+    files = glob.glob("pngfile/pwm/pwm/*.png")
     random.shuffle(files)
     print(files)
     for sche in files:
         print(sche)
         img, thres = img_proc(sche)
-        skel, comp = find_all(img)
-        pre = classify(img, skel, comp, "nnmodels")
-        nodes = node_detect(thres, pre)
+        skel, comp = find_all(img, sche)
+        pre = classify(img, skel, comp, "nnmodels", sche)
+        nodes = node_detect(thres, pre, sche)
         wiring_matrix, comp_matrix = matrix_gen(nodes, pre, img)
         comp_matrix = np.c_[comp_matrix]
         data_matrix = np.hstack((comp_matrix, wiring_matrix))
