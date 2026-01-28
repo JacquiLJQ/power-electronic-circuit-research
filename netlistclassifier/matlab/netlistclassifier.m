@@ -9,7 +9,7 @@ for k=1:length(original_files)
     
     fid = fopen(fname);
     raw = fread(fid,inf);
-    str = char(raw');
+    str = char('raw');
     fclose(fid);
     val = jsondecode(str);
 
