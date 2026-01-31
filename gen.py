@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-gen3.py (wire-topology -> random components on edges)
+gen.py (wire-topology -> random components on edges)
 - Build many wire-only topology templates (graphs)
 - For each wire edge: split by density and randomly place bipoles (to[]) or node components (node[]) along segments
 - Add explicit junction dots (circ) and wire-jump crossings (to[crossing])
@@ -14,7 +14,7 @@ Windows notes:
 - If pdftocairo fails on Windows, install MuPDF and put `mutool` in PATH.
 
 Usage:
-  python gen3.py --out out_circuits --n 50 --seed 42 --density 2 --p_node 0.55 --p_crossing 0.3 --p_junction 0.5
+  python gen.py --out out_circuits --n 50 --seed 42 --density 2 --p_node 0.55 --p_crossing 0.3 --p_junction 0.5
 """
 
 import os
@@ -400,19 +400,6 @@ def make_templates(W: float, H: float) -> List[WireTemplate]:
         )
     )
 
-    # # composition example: ladder + (shifted) bridge connected at ladder out -> bridge in
-    # base = templates[7]  # ladder_2
-    # add = templates[6]  # bridge
-    # add2 = WireTemplate(
-    #     add.name,
-    #     off(add.nodes, dx=W * 0.02, dy=H * 0.10),
-    #     add.edges,
-    #     add.junctions,
-    #     add.crossings,
-    #     add.terminals,
-    # )
-    # templates.append(merge(base, add2, "ladder_plus_bridge", connect=[("out", "in")]))
-
     return templates
 
 
@@ -485,118 +472,6 @@ def wt_rename(wt: WireTemplate, prefix: str) -> WireTemplate:
     )
 
 
-# def compose_random_template(
-#     base_templates: List[WireTemplate],
-#     W: float,
-#     H: float,
-#     rng: random.Random,
-#     k_min: int = 2,
-#     k_max: int = 4,
-#     mode: str = "connect",  # "connect" | "bus"
-# ) -> WireTemplate:
-#     """
-#     Pick k sub-topologies and stitch them into one larger template (wire-only).
-#     mode="connect": chain-connect terminals between modules
-#     mode="bus": add a horizontal bus and connect each module's one terminal to the bus
-#     """
-#     assert mode in ("connect", "bus")
-
-#     k = rng.randint(k_min, k_max)
-#     picks = [rng.choice(base_templates) for _ in range(k)]
-
-#     # Place modules in a grid-ish layout to reduce overlaps
-#     # (2 columns, multiple rows), with jitter.
-#     cols = 2
-#     cell_w = W / cols
-#     cell_h = H / math.ceil(k / cols)
-
-#     composed_nodes: Dict[str, Pt] = {}
-#     composed_edges: List[Tuple[str, str]] = []
-#     composed_junctions: List[str] = []
-#     composed_crossings: List[Tuple[Pt, Pt]] = []
-#     composed_terminals: List[str] = []
-
-#     placed_modules: List[WireTemplate] = []
-
-#     for i, wt in enumerate(picks):
-#         row = i // cols
-#         col = i % cols
-
-#         # small random jitter inside cell
-#         dx = col * cell_w + (rng.random() * 0.15 + 0.05) * cell_w
-#         dy = row * cell_h + (rng.random() * 0.15 + 0.05) * cell_h
-
-#         m = wt_offset(wt, dx, dy)
-#         m = wt_rename(m, prefix=f"m{i}_")
-
-#         # merge module content
-#         composed_nodes.update(m.nodes)
-#         composed_edges.extend(m.edges)
-#         composed_junctions.extend(m.junctions)
-#         composed_crossings.extend(m.crossings)
-#         composed_terminals.extend(m.terminals)
-
-#         placed_modules.append(m)
-
-#     # Stitching
-#     if mode == "connect":
-#         # chain connect: module i -> module i+1
-#         # choose a terminal from each module (fallback to any node)
-#         for i in range(len(placed_modules) - 1):
-#             A = placed_modules[i]
-#             B = placed_modules[i + 1]
-
-#             ta = (
-#                 rng.choice(A.terminals)
-#                 if A.terminals
-#                 else rng.choice(list(A.nodes.keys()))
-#             )
-#             tb = (
-#                 rng.choice(B.terminals)
-#                 if B.terminals
-#                 else rng.choice(list(B.nodes.keys()))
-#             )
-
-#             composed_edges.append((ta, tb))
-#             # optionally mark as junction endpoints for clearer connectivity
-#             composed_junctions.extend([ta, tb])
-
-#     elif mode == "bus":
-#         # Add a horizontal bus across middle and connect one terminal from each module to the bus
-#         bus_y = H * 0.50
-#         bus_x1 = W * 0.05
-#         bus_x2 = W * 0.95
-#         bus_a = "BUS_A"
-#         bus_b = "BUS_B"
-#         composed_nodes[bus_a] = (bus_x1, bus_y)
-#         composed_nodes[bus_b] = (bus_x2, bus_y)
-#         composed_edges.append((bus_a, bus_b))
-#         composed_junctions.extend([bus_a, bus_b])
-
-#         for m in placed_modules:
-#             t = (
-#                 rng.choice(m.terminals)
-#                 if m.terminals
-#                 else rng.choice(list(m.nodes.keys()))
-#             )
-#             composed_edges.append(
-#                 (t, bus_a)
-#             )  # connect to one end, still forms bus structure
-#             composed_junctions.append(t)
-
-#     # de-duplicate junction list
-#     composed_junctions = list(dict.fromkeys(composed_junctions))
-
-#     return WireTemplate(
-#         name=f"COMPOSED_{mode}_{k}",
-#         nodes=composed_nodes,
-#         edges=composed_edges,
-#         junctions=composed_junctions,
-#         crossings=composed_crossings,
-#         terminals=composed_terminals,
-#     )
-
-
 def compose_random_template(
     base_templates: List[WireTemplate],
     W: float,
@@ -606,14 +481,7 @@ def compose_random_template(
     k_max: int = 4,
     mode: str = "connect",  # "connect" | "bus"
 ) -> WireTemplate:
-    """
-    Pick k sub-topologies and stitch them into one larger template (wire-only).
 
-    Changes vs old version:
-      - Use W/H-driven "cells" with explicit gaps so modules cannot get too close.
-      - Still keeps original behavior: connect/bus stitching, terminals/junctions/crossings aggregation.
-      - W/H now truly controls spacing (bigger W/H => bigger cells/gaps => less crowded).
-    """
     assert mode in ("connect", "bus")
 
     k = rng.randint(k_min, k_max)
@@ -1149,17 +1017,9 @@ x=1cm, y=1cm
     def generate_one(self, idx: int) -> None:
         templates = make_templates(self.W, self.H)
 
-        rng = random.Random(self.seed * 1000003 + idx)  # per-sample rng, 更稳定可复现
+        rng = random.Random(self.seed * 1000003 + idx)
         if rng.random() < 0.6:
-            # wt = compose_random_template(
-            #     base_templates=templates,
-            #     W=self.W,
-            #     H=self.H,
-            #     rng=rng,
-            #     k_min=2,
-            #     k_max=4,
-            #     mode=rng.choice(["connect", "bus"]),
-            # )
+
             wt = compose_random_template(
                 base_templates=templates,
                 W=self.W,
