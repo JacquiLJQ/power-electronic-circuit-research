@@ -1,0 +1,130 @@
+{
+  "image": "1_png.jpg",
+  "source_component_json": "1_png.json",
+  "params": {
+    "mask_pad": 2,
+    "blur": 3,
+    "open_iter": 1,
+    "close_iter": 2,
+    "min_area": 80,
+    "connectivity": 8
+  },
+  "nodes_auto": [
+    {
+      "id": 1,
+      "area": 188,
+      "bbox_xywh": [
+        40,
+        35,
+        33,
+        33
+      ],
+      "centroid_xy": [
+        48.90425531914894,
+        43.90425531914894
+      ]
+    },
+    {
+      "id": 2,
+      "area": 210,
+      "bbox_xywh": [
+        130,
+        35,
+        50,
+        23
+      ],
+      "centroid_xy": [
+        152.92857142857142,
+        39.285714285714285
+      ]
+    },
+    {
+      "id": 3,
+      "area": 252,
+      "bbox_xywh": [
+        201,
+        35,
+        52,
+        35
+      ],
+      "centroid_xy": [
+        228.5952380952381,
+        42.666666666666664
+      ]
+    },
+    {
+      "id": 4,
+      "area": 321,
+      "bbox_xywh": [
+        312,
+        35,
+        73,
+        37
+      ],
+      "centroid_xy": [
+        343.23364485981307,
+        41.87850467289719
+      ]
+    },
+    {
+      "id": 5,
+      "area": 1391,
+      "bbox_xywh": [
+        40,
+        93,
+        344,
+        38
+      ],
+      "centroid_xy": [
+        208.84759166067576,
+        124.58662832494608
+      ]
+    }
+  ],
+  "nodes_manual": [
+    {
+      "id": 6,
+      "x": 385,
+      "y": 64,
+      "radius": 6,
+      "kind": "manual_circle"
+    },
+    {
+      "id": 7,
+      "x": 385,
+      "y": 109,
+      "radius": 6,
+      "kind": "manual_circle"
+    }
+  ],
+  "nodes_all": [
+    {
+      "id": 1,
+      "kind": "auto_blob"
+    },
+    {
+      "id": 2,
+      "kind": "auto_blob"
+    },
+    {
+      "id": 3,
+      "kind": "auto_blob"
+    },
+    {
+      "id": 4,
+      "kind": "auto_blob"
+    },
+    {
+      "id": 5,
+      "kind": "auto_blob"
+    },
+    {
+      "id": 6,
+      "kind": "manual_circle"
+    },
+    {
+      "id": 7,
+      "kind": "manual_circle"
+    }
+  ]
+}
