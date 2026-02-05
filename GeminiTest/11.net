@@ -1,0 +1,21 @@
+* Boost Converter Netlist (11.png)
+* 节点定义: 1:Vin, 2:Switch_Node, 3:Vout, 0:GND
+
+** 输入电源 **
+V_in 1 0 DC 12V         ; 假设输入电压为 12V
+
+** 功率级元件 **
+L1 1 2 100uH            ; 升压电感
+M1 2 gate 0 0 NMOS      ; MOSFET 开关 (漏极接2, 源极接0)
+D1 2 3 MyDiode          ; 整流二极管 (阳极接2, 阴极接3)
+
+** 输出级元件 **
+C_out 3 0 100uF         ; 输出滤波电容
+R_load 3 0 20           ; 负载电阻
+
+** 模型与控制指令 **
+.model MyDiode D
+.model NMOS NMOS(Vto=3)
+V_gate gate 0 PULSE(0 10 0 1n 1n 5u 10u) ; 100kHz PWM 驱动
+.tran 1n 5m             ; 瞬态仿真 5ms
+.end

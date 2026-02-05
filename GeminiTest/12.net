@@ -1,0 +1,20 @@
+* Buck Converter Netlist (12.png)
+* 节点定义: 1:Vin, 2:Switch_Node, 3:Vout, 0:GND
+
+** 输入电源 **
+V_in 1 0 DC 24V         ; 假设输入电压为 24V
+
+** 功率转换级元件 **
+M1 1 gate 2 2 NMOS      ; MOSFET 开关 (高侧驱动)
+D1 0 2 MyDiode          ; 续流二极管 (阳极接0, 阴极接2)
+L1 2 3 220uH            ; 输出滤波电感
+C_out 3 0 100uF         ; 输出滤波电容
+R_load 3 0 10           ; 负载电阻
+
+** 模型与控制指令 **
+.model MyDiode D
+.model NMOS NMOS(Vto=3)
+* 注意：由于 M1 是高侧管，驱动信号 V_gate 必须相对于源极（节点 2）施加
+V_gate gate 2 PULSE(0 10 0 1n 1n 10u 20u) 
+.tran 1n 20m            ; 瞬态仿真 20ms
+.end
