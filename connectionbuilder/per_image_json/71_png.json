@@ -1,11 +1,11 @@
 {
   "info": {
     "year": "2026",
-    "version": "2",
+    "version": "3",
     "description": "Exported from roboflow.com",
     "contributor": "",
     "url": "https://public.roboflow.com/object-detection/undefined",
-    "date_created": "2026-02-03T20:58:02+00:00"
+    "date_created": "2026-02-05T04:06:49+00:00"
   },
   "licenses": [
     {
@@ -57,73 +57,68 @@
     },
     {
       "id": 8,
-      "name": "junction",
-      "supercategory": "objects"
-    },
-    {
-      "id": 9,
       "name": "load",
       "supercategory": "objects"
     },
     {
-      "id": 10,
+      "id": 9,
       "name": "negative_sign",
       "supercategory": "objects"
     },
     {
-      "id": 11,
+      "id": 10,
       "name": "positive_sign",
       "supercategory": "objects"
     },
     {
-      "id": 12,
+      "id": 11,
       "name": "resistor",
       "supercategory": "objects"
     },
     {
-      "id": 13,
+      "id": 12,
       "name": "swi_ideal",
       "supercategory": "objects"
     },
     {
-      "id": 14,
+      "id": 13,
       "name": "swi_real",
       "supercategory": "objects"
     },
     {
-      "id": 15,
+      "id": 14,
       "name": "text",
       "supercategory": "objects"
     },
     {
-      "id": 16,
+      "id": 15,
       "name": "transformer",
       "supercategory": "objects"
     },
     {
-      "id": 17,
+      "id": 16,
       "name": "unknown_component",
       "supercategory": "objects"
     },
     {
-      "id": 18,
+      "id": 17,
       "name": "volt_src",
       "supercategory": "objects"
     },
     {
-      "id": 19,
+      "id": 18,
       "name": "wire_jump",
       "supercategory": "objects"
     }
   ],
   "images": [
     {
-      "id": 133,
+      "id": 171,
       "license": 1,
       "file_name": "71_png.rf.d62f732b64369b6b0b92595728e4178c.jpg",
       "height": 177,
       "width": 320,
-      "date_captured": "2026-02-03T20:58:02+00:00",
+      "date_captured": "2026-02-05T04:06:49+00:00",
       "extra": {
         "name": "71.png"
       }
@@ -131,9 +126,9 @@
   ],
   "annotations": [
     {
-      "id": 2236,
-      "image_id": 133,
-      "category_id": 14,
+      "id": 2248,
+      "image_id": 171,
+      "category_id": 13,
       "bbox": [
         102,
         26,
@@ -145,8 +140,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2237,
-      "image_id": 133,
+      "id": 2249,
+      "image_id": 171,
       "category_id": 5,
       "bbox": [
         154,
@@ -159,8 +154,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2238,
-      "image_id": 133,
+      "id": 2250,
+      "image_id": 171,
       "category_id": 5,
       "bbox": [
         69,
@@ -173,8 +168,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2239,
-      "image_id": 133,
+      "id": 2251,
+      "image_id": 171,
       "category_id": 5,
       "bbox": [
         70,
@@ -187,8 +182,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2240,
-      "image_id": 133,
+      "id": 2252,
+      "image_id": 171,
       "category_id": 7,
       "bbox": [
         184,
@@ -201,8 +196,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2241,
-      "image_id": 133,
+      "id": 2253,
+      "image_id": 171,
       "category_id": 7,
       "bbox": [
         158,
@@ -215,9 +210,9 @@
       "iscrowd": 0
     },
     {
-      "id": 2242,
-      "image_id": 133,
-      "category_id": 12,
+      "id": 2254,
+      "image_id": 171,
+      "category_id": 11,
       "bbox": [
         301,
         77,
@@ -229,8 +224,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2243,
-      "image_id": 133,
+      "id": 2255,
+      "image_id": 171,
       "category_id": 3,
       "bbox": [
         115,
@@ -243,8 +238,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2244,
-      "image_id": 133,
+      "id": 2256,
+      "image_id": 171,
       "category_id": 3,
       "bbox": [
         237,
@@ -257,8 +252,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2245,
-      "image_id": 133,
+      "id": 2257,
+      "image_id": 171,
       "category_id": 2,
       "bbox": [
         12,

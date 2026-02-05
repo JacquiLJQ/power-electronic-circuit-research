@@ -1,11 +1,11 @@
 {
   "info": {
     "year": "2026",
-    "version": "2",
+    "version": "3",
     "description": "Exported from roboflow.com",
     "contributor": "",
     "url": "https://public.roboflow.com/object-detection/undefined",
-    "date_created": "2026-02-03T20:58:02+00:00"
+    "date_created": "2026-02-05T04:06:49+00:00"
   },
   "licenses": [
     {
@@ -57,73 +57,68 @@
     },
     {
       "id": 8,
-      "name": "junction",
-      "supercategory": "objects"
-    },
-    {
-      "id": 9,
       "name": "load",
       "supercategory": "objects"
     },
     {
-      "id": 10,
+      "id": 9,
       "name": "negative_sign",
       "supercategory": "objects"
     },
     {
-      "id": 11,
+      "id": 10,
       "name": "positive_sign",
       "supercategory": "objects"
     },
     {
-      "id": 12,
+      "id": 11,
       "name": "resistor",
       "supercategory": "objects"
     },
     {
-      "id": 13,
+      "id": 12,
       "name": "swi_ideal",
       "supercategory": "objects"
     },
     {
-      "id": 14,
+      "id": 13,
       "name": "swi_real",
       "supercategory": "objects"
     },
     {
-      "id": 15,
+      "id": 14,
       "name": "text",
       "supercategory": "objects"
     },
     {
-      "id": 16,
+      "id": 15,
       "name": "transformer",
       "supercategory": "objects"
     },
     {
-      "id": 17,
+      "id": 16,
       "name": "unknown_component",
       "supercategory": "objects"
     },
     {
-      "id": 18,
+      "id": 17,
       "name": "volt_src",
       "supercategory": "objects"
     },
     {
-      "id": 19,
+      "id": 18,
       "name": "wire_jump",
       "supercategory": "objects"
     }
   ],
   "images": [
     {
-      "id": 168,
+      "id": 98,
       "license": 1,
       "file_name": "68_png.rf.f2227d180ac0841f93a273ef56a41ccc.jpg",
       "height": 203,
       "width": 360,
-      "date_captured": "2026-02-03T20:58:02+00:00",
+      "date_captured": "2026-02-05T04:06:49+00:00",
       "extra": {
         "name": "68.png"
       }
@@ -131,9 +126,9 @@
   ],
   "annotations": [
     {
-      "id": 2879,
-      "image_id": 168,
-      "category_id": 14,
+      "id": 1304,
+      "image_id": 98,
+      "category_id": 13,
       "bbox": [
         201,
         17,
@@ -145,8 +140,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2880,
-      "image_id": 168,
+      "id": 1305,
+      "image_id": 98,
       "category_id": 5,
       "bbox": [
         141,
@@ -159,8 +154,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2881,
-      "image_id": 168,
+      "id": 1306,
+      "image_id": 98,
       "category_id": 5,
       "bbox": [
         181,
@@ -173,9 +168,9 @@
       "iscrowd": 0
     },
     {
-      "id": 2882,
-      "image_id": 168,
-      "category_id": 14,
+      "id": 1307,
+      "image_id": 98,
+      "category_id": 13,
       "bbox": [
         167,
         129,
@@ -187,8 +182,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2883,
-      "image_id": 168,
+      "id": 1308,
+      "image_id": 98,
       "category_id": 3,
       "bbox": [
         144,
@@ -201,8 +196,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2884,
-      "image_id": 168,
+      "id": 1309,
+      "image_id": 98,
       "category_id": 2,
       "bbox": [
         10,
@@ -215,8 +210,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2885,
-      "image_id": 168,
+      "id": 1310,
+      "image_id": 98,
       "category_id": 3,
       "bbox": [
         266,
@@ -229,9 +224,9 @@
       "iscrowd": 0
     },
     {
-      "id": 2886,
-      "image_id": 168,
-      "category_id": 12,
+      "id": 1311,
+      "image_id": 98,
+      "category_id": 11,
       "bbox": [
         329,
         106,
@@ -243,8 +238,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2887,
-      "image_id": 168,
+      "id": 1312,
+      "image_id": 98,
       "category_id": 7,
       "bbox": [
         209,
@@ -257,8 +252,8 @@
       "iscrowd": 0
     },
     {
-      "id": 2888,
-      "image_id": 168,
+      "id": 1313,
+      "image_id": 98,
       "category_id": 7,
       "bbox": [
         41,

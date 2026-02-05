@@ -1,11 +1,11 @@
 {
   "info": {
     "year": "2026",
-    "version": "2",
+    "version": "3",
     "description": "Exported from roboflow.com",
     "contributor": "",
     "url": "https://public.roboflow.com/object-detection/undefined",
-    "date_created": "2026-02-03T20:58:02+00:00"
+    "date_created": "2026-02-05T04:06:49+00:00"
   },
   "licenses": [
     {
@@ -57,73 +57,68 @@
     },
     {
       "id": 8,
-      "name": "junction",
-      "supercategory": "objects"
-    },
-    {
-      "id": 9,
       "name": "load",
       "supercategory": "objects"
     },
     {
-      "id": 10,
+      "id": 9,
       "name": "negative_sign",
       "supercategory": "objects"
     },
     {
-      "id": 11,
+      "id": 10,
       "name": "positive_sign",
       "supercategory": "objects"
     },
     {
-      "id": 12,
+      "id": 11,
       "name": "resistor",
       "supercategory": "objects"
     },
     {
-      "id": 13,
+      "id": 12,
       "name": "swi_ideal",
       "supercategory": "objects"
     },
     {
-      "id": 14,
+      "id": 13,
       "name": "swi_real",
       "supercategory": "objects"
     },
     {
-      "id": 15,
+      "id": 14,
       "name": "text",
       "supercategory": "objects"
     },
     {
-      "id": 16,
+      "id": 15,
       "name": "transformer",
       "supercategory": "objects"
     },
     {
-      "id": 17,
+      "id": 16,
       "name": "unknown_component",
       "supercategory": "objects"
     },
     {
-      "id": 18,
+      "id": 17,
       "name": "volt_src",
       "supercategory": "objects"
     },
     {
-      "id": 19,
+      "id": 18,
       "name": "wire_jump",
       "supercategory": "objects"
     }
   ],
   "images": [
     {
-      "id": 14,
+      "id": 82,
       "license": 1,
-      "file_name": "312_png.rf.d1157f50b51e1d6cb612363370aa4bcf.jpg",
+      "file_name": "312_png.rf.64bfe5416164d1c33cb46414eaa93286.jpg",
       "height": 229,
       "width": 740,
-      "date_captured": "2026-02-03T20:58:02+00:00",
+      "date_captured": "2026-02-05T04:06:49+00:00",
       "extra": {
         "name": "312.png"
       }
@@ -131,9 +126,9 @@
   ],
   "annotations": [
     {
-      "id": 226,
-      "image_id": 14,
-      "category_id": 14,
+      "id": 1128,
+      "image_id": 82,
+      "category_id": 13,
       "bbox": [
         364,
         101,
@@ -145,8 +140,8 @@
       "iscrowd": 0
     },
     {
-      "id": 227,
-      "image_id": 14,
+      "id": 1129,
+      "image_id": 82,
       "category_id": 7,
       "bbox": [
         217,
@@ -159,64 +154,8 @@
       "iscrowd": 0
     },
     {
-      "id": 228,
-      "image_id": 14,
-      "category_id": 8,
-      "bbox": [
-        419,
-        33,
-        27.03,
-        25.9
-      ],
-      "area": 700.077,
-      "segmentation": [],
-      "iscrowd": 0
-    },
-    {
-      "id": 229,
-      "image_id": 14,
-      "category_id": 8,
-      "bbox": [
-        422,
-        196,
-        24.68,
-        24.52
-      ],
-      "area": 605.154,
-      "segmentation": [],
-      "iscrowd": 0
-    },
-    {
-      "id": 230,
-      "image_id": 14,
-      "category_id": 8,
-      "bbox": [
-        622,
-        198,
-        22.87,
-        25.73
-      ],
-      "area": 588.445,
-      "segmentation": [],
-      "iscrowd": 0
-    },
-    {
-      "id": 231,
-      "image_id": 14,
-      "category_id": 8,
-      "bbox": [
-        622,
-        34,
-        28,
-        31.47
-      ],
-      "area": 881.16,
-      "segmentation": [],
-      "iscrowd": 0
-    },
-    {
-      "id": 232,
-      "image_id": 14,
+      "id": 1130,
+      "image_id": 82,
       "category_id": 5,
       "bbox": [
         518,
@@ -229,8 +168,8 @@
       "iscrowd": 0
     },
     {
-      "id": 233,
-      "image_id": 14,
+      "id": 1131,
+      "image_id": 82,
       "category_id": 3,
       "bbox": [
         592,
@@ -243,9 +182,9 @@
       "iscrowd": 0
     },
     {
-      "id": 234,
-      "image_id": 14,
-      "category_id": 12,
+      "id": 1132,
+      "image_id": 82,
+      "category_id": 11,
       "bbox": [
         683,
         102,
@@ -257,9 +196,9 @@
       "iscrowd": 0
     },
     {
-      "id": 235,
-      "image_id": 14,
-      "category_id": 15,
+      "id": 1133,
+      "image_id": 82,
+      "category_id": 14,
       "bbox": [
         39,
         106,

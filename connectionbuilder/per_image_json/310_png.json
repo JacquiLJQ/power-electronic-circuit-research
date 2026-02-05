@@ -1,11 +1,11 @@
 {
   "info": {
     "year": "2026",
-    "version": "2",
+    "version": "3",
     "description": "Exported from roboflow.com",
     "contributor": "",
     "url": "https://public.roboflow.com/object-detection/undefined",
-    "date_created": "2026-02-03T20:58:02+00:00"
+    "date_created": "2026-02-05T04:06:49+00:00"
   },
   "licenses": [
     {
@@ -57,73 +57,68 @@
     },
     {
       "id": 8,
-      "name": "junction",
-      "supercategory": "objects"
-    },
-    {
-      "id": 9,
       "name": "load",
       "supercategory": "objects"
     },
     {
-      "id": 10,
+      "id": 9,
       "name": "negative_sign",
       "supercategory": "objects"
     },
     {
-      "id": 11,
+      "id": 10,
       "name": "positive_sign",
       "supercategory": "objects"
     },
     {
-      "id": 12,
+      "id": 11,
       "name": "resistor",
       "supercategory": "objects"
     },
     {
-      "id": 13,
+      "id": 12,
       "name": "swi_ideal",
       "supercategory": "objects"
     },
     {
-      "id": 14,
+      "id": 13,
       "name": "swi_real",
       "supercategory": "objects"
     },
     {
-      "id": 15,
+      "id": 14,
       "name": "text",
       "supercategory": "objects"
     },
     {
-      "id": 16,
+      "id": 15,
       "name": "transformer",
       "supercategory": "objects"
     },
     {
-      "id": 17,
+      "id": 16,
       "name": "unknown_component",
       "supercategory": "objects"
     },
     {
-      "id": 18,
+      "id": 17,
       "name": "volt_src",
       "supercategory": "objects"
     },
     {
-      "id": 19,
+      "id": 18,
       "name": "wire_jump",
       "supercategory": "objects"
     }
   ],
   "images": [
     {
-      "id": 93,
+      "id": 43,
       "license": 1,
-      "file_name": "310_png.rf.202bb26dc783da99aa1139e5d2c520d2.jpg",
+      "file_name": "310_png.rf.5224370e53c8e65f5f96cae9ec496f08.jpg",
       "height": 495,
       "width": 1003,
-      "date_captured": "2026-02-03T20:58:02+00:00",
+      "date_captured": "2026-02-05T04:06:49+00:00",
       "extra": {
         "name": "310.png"
       }
@@ -131,8 +126,8 @@
   ],
   "annotations": [
     {
-      "id": 1629,
-      "image_id": 93,
+      "id": 578,
+      "image_id": 43,
       "category_id": 7,
       "bbox": [
         205,
@@ -145,8 +140,8 @@
       "iscrowd": 0
     },
     {
-      "id": 1630,
-      "image_id": 93,
+      "id": 579,
+      "image_id": 43,
       "category_id": 5,
       "bbox": [
         456,
@@ -159,9 +154,9 @@
       "iscrowd": 0
     },
     {
-      "id": 1631,
-      "image_id": 93,
-      "category_id": 14,
+      "id": 580,
+      "image_id": 43,
+      "category_id": 13,
       "bbox": [
         294,
         207,
@@ -173,9 +168,9 @@
       "iscrowd": 0
     },
     {
-      "id": 1632,
-      "image_id": 93,
-      "category_id": 18,
+      "id": 581,
+      "image_id": 43,
+      "category_id": 17,
       "bbox": [
         72,
         200,
@@ -187,8 +182,8 @@
       "iscrowd": 0
     },
     {
-      "id": 1633,
-      "image_id": 93,
+      "id": 582,
+      "image_id": 43,
       "category_id": 3,
       "bbox": [
         533,
@@ -201,9 +196,9 @@
       "iscrowd": 0
     },
     {
-      "id": 1634,
-      "image_id": 93,
-      "category_id": 12,
+      "id": 583,
+      "image_id": 43,
+      "category_id": 11,
       "bbox": [
         758,
         137,
@@ -211,62 +206,6 @@
         210.45
       ],
       "area": 22006.756,
-      "segmentation": [],
-      "iscrowd": 0
-    },
-    {
-      "id": 1635,
-      "image_id": 93,
-      "category_id": 8,
-      "bbox": [
-        573,
-        105,
-        25.94,
-        30.89
-      ],
-      "area": 801.287,
-      "segmentation": [],
-      "iscrowd": 0
-    },
-    {
-      "id": 1636,
-      "image_id": 93,
-      "category_id": 8,
-      "bbox": [
-        400,
-        107,
-        28.48,
-        26.86
-      ],
-      "area": 764.973,
-      "segmentation": [],
-      "iscrowd": 0
-    },
-    {
-      "id": 1637,
-      "image_id": 93,
-      "category_id": 8,
-      "bbox": [
-        401,
-        345,
-        28.86,
-        25.65
-      ],
-      "area": 740.259,
-      "segmentation": [],
-      "iscrowd": 0
-    },
-    {
-      "id": 1638,
-      "image_id": 93,
-      "category_id": 8,
-      "bbox": [
-        572,
-        348,
-        33.34,
-        31.8
-      ],
-      "area": 1060.212,
       "segmentation": [],
       "iscrowd": 0
     }
