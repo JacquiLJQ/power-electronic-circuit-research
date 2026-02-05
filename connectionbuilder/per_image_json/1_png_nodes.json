@@ -159,28 +159,8 @@
   "manual_nodes": [],
   "connections": [
     {
-      "node_id": 3,
-      "component_id": 1
-    },
-    {
-      "node_id": 3,
-      "component_id": 7
-    },
-    {
-      "node_id": 1,
-      "component_id": 3
-    },
-    {
-      "node_id": 1,
-      "component_id": 6
-    },
-    {
       "node_id": 5,
-      "component_id": 6
-    },
-    {
-      "node_id": 5,
-      "component_id": 5
+      "component_id": 8
     },
     {
       "node_id": 5,
@@ -192,19 +172,11 @@
     },
     {
       "node_id": 5,
-      "component_id": 8
-    },
-    {
-      "node_id": 2,
-      "component_id": 3
-    },
-    {
-      "node_id": 2,
-      "component_id": 1
-    },
-    {
-      "node_id": 2,
       "component_id": 5
+    },
+    {
+      "node_id": 5,
+      "component_id": 6
     },
     {
       "node_id": 4,
@@ -212,7 +184,43 @@
     },
     {
       "node_id": 4,
+      "component_id": 2
+    },
+    {
+      "node_id": 4,
       "component_id": 8
+    },
+    {
+      "node_id": 3,
+      "component_id": 1
+    },
+    {
+      "node_id": 3,
+      "component_id": 7
+    },
+    {
+      "node_id": 3,
+      "component_id": 4
+    },
+    {
+      "node_id": 2,
+      "component_id": 3
+    },
+    {
+      "node_id": 2,
+      "component_id": 5
+    },
+    {
+      "node_id": 2,
+      "component_id": 1
+    },
+    {
+      "node_id": 1,
+      "component_id": 3
+    },
+    {
+      "node_id": 1,
+      "component_id": 6
     }
   ]
 }
