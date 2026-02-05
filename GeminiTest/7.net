@@ -1,0 +1,28 @@
+* Bidirectional DC-DC Converter Netlist (7.png)
+* 节点: 1:V_high, 2:Switch_Node, 3:V_battery, 0:GND
+
+** 左侧高压侧电容 **
+C_high 1 0 470uF
+
+** 半桥开关管 (IGBT带反并联二极管) **
+* 上管 Q1
+Q1 1 g1 2 IGBT_Model
+D1 2 1 MyDiode          ; 反并联二极管1
+* 下管 Q2
+Q2 2 g2 0 IGBT_Model
+D2 0 2 MyDiode          ; 反并联二极管2
+
+** 储能电感与右侧电池 **
+L_main 2 3 1mH
+V_bat 3 0 DC 24V        ; 右侧电池，假设为 24V
+
+** 模型与控制指令 **
+.model MyDiode D
+.model IGBT_Model nmos(level=1 Vto=4) ; 常用仿真简化模型
+
+* 互补 PWM 驱动逻辑
+V_g1 g1 2 PULSE(0 15 0 100n 100n 10u 20u)    ; 上管驱动
+V_g2 g2 0 PULSE(0 15 10u 100n 100n 10u 20u)   ; 下管驱动（带180度移相）
+
+.tran 1u 10m
+.end

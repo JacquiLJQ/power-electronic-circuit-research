@@ -1,0 +1,34 @@
+* Interleaved Switched-Capacitor Boost Converter Netlist (110.png)
+* 节点: 1:Vin, 2:L1-M1, 3:L2-M2, 4:C_mid1, 5:C_mid2, 6:Vout, 0:GND
+
+** 输入电源 **
+Vin 1 0 DC 24V
+
+** 第一相 (上支路) **
+L1 1 2 220uH
+M1 2 gate1 0 0 NMOS      ; 第一相开关
+C_sub1 2 4 10uF          ; 上支路倍压电容
+D_sub1 4 5 MyDiode       ; 交叉连接二极管1
+D_out1 4 6 MyDiode       ; 输出二极管1
+
+** 第二相 (下支路) **
+L2 1 3 220uH
+M2 3 gate2 0 0 NMOS      ; 第二相开关
+C_sub2 3 5 10uF          ; 下支路倍压电容
+D_sub2 5 4 MyDiode       ; 交叉连接二极管2
+D_out2 5 6 MyDiode       ; 输出二极管2
+
+** 输出级 **
+C_out 6 0 470uF
+R_load 6 0 100           ; 负载电阻
+
+** 模型与控制指令 **
+.model MyDiode D
+.model NMOS NMOS(Vto=3)
+
+* 交错驱动信号：gate1 和 gate2 相位相差 180 度
+V_g1 gate1 0 PULSE(0 10 0 1n 1n 10u 20u)
+V_g2 gate2 0 PULSE(0 10 10u 1n 1n 10u 20u)
+
+.tran 1u 20m
+.end

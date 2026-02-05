@@ -1,0 +1,27 @@
+* Buck Converter with Input Filter Netlist
+* 节点: 1:输入, 2:滤波后节点, 3:开关节点, 4:输出, 0:地
+
+** 输入直流电源 **
+Vin 1 0 DC 24V
+
+** 输入滤波器 (L-R-C) **
+L_filter 1 1a 100uH
+R_esr1 1a 2 0.1       ; 输入电感寄生电阻
+C_filter 2 0 47uF
+
+** 功率开关级 **
+M1 2 gate 3 3 NMOS    ; 功率开关管
+D1 0 3 MyDiode        ; 续流二极管 (阳极接0, 阴极接3)
+
+** 输出储能滤波 (L-R-C) **
+L_buck 3 3a 220uH
+R_esr2 3a 4 0.2       ; 输出电感寄生电阻
+C_out 4 0 100uF
+R_load 4 0 5          ; 负载电阻
+
+** 控制与模型指令 **
+.model MyDiode D
+.model NMOS NMOS(Vto=2.5 KP=20)
+V_gate gate 3 PULSE(0 10 0 1n 1n 10u 20u) ; 浮地驱动信号示例
+.tran 1n 20m
+.end

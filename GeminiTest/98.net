@@ -1,0 +1,43 @@
+* 5-Level Flying Capacitor Multilevel Inverter (Phase Leg)
+* 节点定义: 10:Vdc+, 0:Vdc-, 5:GND_Mid
+* 开关管从上到下编号: S1, S2, S3, S4 (上桥) / S5, S6, S7, S8 (下桥)
+
+** 直流母线与支撑电容 **
+V1 10 0 DC 800V
+Cbus1 10 5 1000uF
+Cbus2 5 0 1000uF
+
+** 飞跨电容 (Flying Capacitors) **
+* 外层 C2 组
+C2_top 11 14 470uF    ; 对应图中 C2 上方
+C2_bot 15 18 470uF    ; 对应图中 C2 下方
+* 内层 C1
+C1_mid 12 17 470uF    ; 对应图中 C1
+
+** IGBT 开关阵列 (每个包括反并联二极管) **
+* 上桥臂
+X_S1 10 g1 11 11 IGBT_Pair  ; 节点10-11
+X_S2 11 g2 12 12 IGBT_Pair  ; 节点11-12
+X_S3 12 g3 13 13 IGBT_Pair  ; 节点12-13
+X_S4 13 g4 OUT OUT IGBT_Pair ; 节点13-OUT
+
+* 下桥臂
+X_S5 OUT g5 16 16 IGBT_Pair ; 节点OUT-16
+X_S6 16 g6 17 17 IGBT_Pair  ; 节点16-17
+X_S7 17 g7 18 18 IGBT_Pair  ; 节点17-18
+X_S8 18 g8 0 0 IGBT_Pair    ; 节点18-0
+
+** 子电路定义：IGBT + 反并联二极管 **
+.subckt IGBT_Pair C G S
+M1 C G S S PowerMOS         ; 简化模型
+D1 S C MyDiode              ; 反并联二极管
+.ends
+
+** 负载与控制 **
+R_load OUT 5 100            ; 负载接在中点地
+.model MyDiode D
+.model PowerMOS NMOS(Vto=4)
+
+* 仿真指令
+.tran 1u 100m
+.end

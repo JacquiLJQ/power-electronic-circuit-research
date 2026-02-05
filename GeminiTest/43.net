@@ -1,0 +1,30 @@
+* Current-Source Switching Network Netlist (43.png)
+* 节点: 1:Vin, 2:S1-D1, 3:L_top, 4:L_bot, 5:Vout, 0:GND
+
+** 输入直流电源 **
+Vin 1 0 DC 48V
+
+** 左侧输入支路 (开关+二极管) **
+S1 1 g1 2 2 IGBT          ; 第一个开关管
+D1 2 3 MyDiode            ; 串联隔离二极管
+
+** 中间能量交换电感 **
+L_main 3 4 500uH
+
+** 右侧控制与续流网络 **
+S2 5 g2 3 3 IGBT          ; 右侧上部开关
+D2 4 5 MyDiode            ; 右侧续流二极管
+S3 4 g3 4a 4a IGBT        ; 右侧下部开关
+D3 4a 0 MyDiode           ; 底部隔离二极管
+
+** 输出滤波与负载 **
+C_out 5 0 220uF           ; 输出平滑电容
+R_load 5 0 15             ; 负载电阻
+
+** 模型与控制 **
+.model MyDiode D
+.model IGBT nmos(level=1 Vto=4)
+* 这里的驱动信号逻辑需要根据具体的变换模式（Buck-Boost或谐振）来编写
+V_g1 g1 0 PULSE(0 10 0 1n 1n 10u 20u)
+.tran 1u 10m
+.end

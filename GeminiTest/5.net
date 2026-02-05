@@ -1,0 +1,23 @@
+* Cuk Converter Netlist (5.png)
+* 节点定义: 1:Vin_pos, 2:L1_M1_C1, 3:C1_D1_L2, 4:Vout_neg, 0:GND
+
+** 输入部分 **
+Vin 1 0 DC 12V          ; 假设输入 12V
+
+** 功率转换级 **
+L1 1 2 1mH              ; 输入电感
+M1 2 gate 0 0 NMOS      ; 开关管 (MOSFET)
+C1 2 3 10uF             ; 耦合电容
+D1 0 3 MyDiode          ; 续流二极管 (阳极接地，阴极接节点3)
+
+** 输出滤波级 **
+L2 3 4 1mH              ; 输出电感
+C2 4 0 100uF            ; 输出电容
+Rload 4 0 10            ; 负载电阻
+
+** 模型与控制指令 **
+.model MyDiode D        ; 基础二极管模型
+.model NMOS NMOS        ; 基础 NMOS 模型
+V_gate gate 0 PULSE(0 10 0 1n 1n 10u 20u) ; 50kHz PWM 驱动信号
+.tran 1n 20m            ; 瞬态分析 20ms
+.end

@@ -1,0 +1,38 @@
+* Three-Phase Current Source Inverter (CSI) System
+* 节点: 1:Vin, 2:Chopper_Out, dc_link:Bus, phase_A/B/C:Output, 0:GND
+
+** 前级直流斩波与电感 **
+Vin 1 0 DC 400V
+Q_main 1 gate_main 2 2 IGBT    ; 输入控制开关
+D_free 0 2 MyDiode             ; 续流二极管
+L_link 2 dc_link 10mH          ; 关键直流链路电感
+
+** 三相逆变桥 (简化模型：IGBT串联二极管) **
+* A相
+Q1 dc_link g1 a_up a_up IGBT   ; 上桥臂Q1
+D1 a_up phase_A MyDiode
+Q4 phase_A g4 0 0 IGBT         ; 下桥臂Q4
+D4 0 phase_A MyDiode           ; 注意：CSI下桥臂二极管方向需根据具体器件定义
+
+* B相
+Q2 dc_link g2 b_up b_up IGBT
+D2 b_up phase_B MyDiode
+Q5 phase_B g5 0 0 IGBT
+D5 0 phase_B MyDiode
+
+* C相
+Q3 dc_link g3 c_up c_up IGBT
+D3 c_up phase_C MyDiode
+Q6 phase_C g6 0 0 IGBT
+D6 0 phase_C MyDiode
+
+** 输出滤波电容 (Δ或Y型连接，此处示例为星型) **
+Ca phase_A 0 10uF
+Cb phase_B 0 10uF
+Cc phase_C 0 10uF
+
+** 基础模型定义 **
+.model MyDiode D
+.model IGBT nmos(level=1 Vto=4) ; 仿真中常用高级MOS模型模拟IGBT行为
+.tran 1u 50m
+.end

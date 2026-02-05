@@ -1,0 +1,40 @@
+* Dual Active Bridge (DAB) Converter Netlist (14.png)
+* 节点: 10:Vdc1_pos, 0:GND, 20:Vdc2_pos, 0s:GND_sec
+
+** 左侧直流侧 (Primary DC Side) **
+V1 10 0 DC 400V
+C1 10 0 470uF
+
+** 左侧 H 桥 (Full Bridge 1) **
+* 左桥臂
+M1 10 g1 L1 L1 NMOS
+M2 L1 g2 0 0 NMOS
+* 右桥臂
+M3 10 g3 L2 L2 NMOS
+M4 L2 g4 0 0 NMOS
+
+** 高频变压器与漏感 **
+L_leak L1 TX_p 10uH     ; 能量传输的关键漏感
+TX_pri TX_p L2 100uH    ; 变压器原边
+TX_sec R1 R2 100uH      ; 变压器副边
+K_main TX_pri TX_sec 0.99 ; 磁耦合系数
+
+** 右侧 H 桥 (Full Bridge 2) **
+* 左桥臂
+M5 20 g5 R1 R1 NMOS
+M6 R1 g6 0s 0s NMOS
+* 右桥臂
+M7 20 g7 R2 R2 NMOS
+M8 R2 g8 0s 0s NMOS
+
+** 右侧直流侧 (Secondary DC Side) **
+C2 20 0s 470uF
+V2 20 0s DC 48V         ; 假设右侧连接的是电池或另一直流母线
+R_load 20 0s 10         ; 负载
+
+** 仿真控制 **
+.model NMOS NMOS(Vto=4)
+* DAB 通常采用移相控制 (Phase Shift Control)
+* 需要 8 路驱动信号，这里略写，关键在于控制左右桥之间的相位差
+.tran 1u 5m
+.end

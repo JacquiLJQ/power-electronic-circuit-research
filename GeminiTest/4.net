@@ -1,0 +1,26 @@
+* SEPIC Converter Netlist (4.png)
+* 节点: 1:Vin, 2:L1-D1, 3:D1-M1-C1, 4:C1-L2-D2, 5:Vout, 0:GND
+
+** 输入电源 **
+Vin 1 0 DC 12V
+
+** 输入侧元件 **
+L1 1 2 100uH
+D1 2 3 MyDiode         ; 支路中的第一个二极管
+M1 3 gate 0 0 NMOS     ; 主开关管，漏极接3，源极接地
+
+** 中间能量传输 **
+C1 3 4 10uF            ; 耦合电容
+L2 4 0 100uH           ; 第二个电感（接地）
+D2 4 5 MyDiode         ; 输出整流二极管
+
+** 输出级 **
+C2 5 0 220uF           ; 输出滤波电容
+Rload 5 0 20           ; 负载电阻
+
+** 模型与驱动指令 **
+.model MyDiode D
+.model NMOS NMOS
+V_gate gate 0 PULSE(0 10 0 1n 1n 10u 20u) ; 50kHz 驱动信号
+.tran 1n 10m
+.end

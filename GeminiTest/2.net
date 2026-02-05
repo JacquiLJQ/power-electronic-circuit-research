@@ -1,0 +1,14 @@
+* Boost Converter Netlist
+V_bat 1 0 DC 5V         ; 电池输入
+L1 1 2 100uH            ; 升压电感
+M1 2 gate 0 0 NMOS      ; MOSFET开关
+D1 2 3 MyDiode          ; 整流二极管：阳极接2，阴极接3
+C_out 3 0 47uF          ; 输出滤波电容
+R_load 3 0 50           ; 负载电阻
+
+* 基础仿真控制
+.model MyDiode D
+.model NMOS NMOS
+V_gate gate 0 PULSE(0 10 0 1n 1n 5u 10u) ; 100kHz PWM驱动
+.tran 1n 5m
+.end

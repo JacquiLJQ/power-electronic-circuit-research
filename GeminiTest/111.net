@@ -1,0 +1,37 @@
+* LLC Resonant Converter Netlist (111.png)
+* 节点: 1:Vin, HB:Half-Bridge, RES:Resonant_Node, OUT:Vout, 0:GND
+
+** 前级半桥逆变器 **
+Vin 1 0 DC 400V
+M1 1 g1 HB HB NMOS         ; 上桥臂开关
+M2 HB g2 0 0 NMOS          ; 下桥臂开关
+D_clamp1 0 1 MyDiode       ; 输入侧钳位二极管支路
+D_clamp2 0 HB MyDiode
+
+** 谐振网络与变压器原边 **
+Lr HB RES 100uH            ; 串联谐振电感
+Cr RES TXp 22nF            ; 谐振电容
+* 变压器模型：1:n 变比，包含励磁电感 Lm
+Lp TXp 0 500uH             ; 原边励磁电感
+K1 Lp Ls 0.99              ; 变压器耦合系数
+
+** 副边全桥整流 **
+Ls TXs1 TXs2 10uH          ; 副边绕组
+D1 TXs1 OUT MyDiode        ; 整流桥二极管1
+D2 TXs2 OUT MyDiode        ; 整流桥二极管2
+D3 0 TXs1 MyDiode          ; 整流桥二极管3
+D4 0 TXs2 MyDiode          ; 整流桥二极管4
+
+** 输出滤波器与负载 **
+C_out OUT 0 470uF
+R_load OUT 0 20
+
+** 模型与控制 **
+.model MyDiode D
+.model NMOS NMOS(Vto=4)
+* 谐振变换器通过频率控制 (PFM)，需设置互补的 PWM 信号
+V_g1 g1 HB PULSE(0 12 0 100n 100n 4u 10u)
+V_g2 g2 0  PULSE(0 12 5u 100n 100n 4u 10u)
+
+.tran 1u 5m
+.end

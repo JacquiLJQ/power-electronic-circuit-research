@@ -1,0 +1,30 @@
+* Isolated Multi-level Bridge Leg Netlist (15.png)
+* 节点: 10:Vdc_pos, A/B/C:Switch_Nodes, OUT:Filter_In, 0:GND
+
+** 左侧隔离驱动部分 **
+I1 11 12 5A             ; 左侧输入电流源
+L_pri 11 12 100uH       ; 变压器原边
+L_sec TXs1 TXs2 100uH   ; 变压器副边
+K1 L_pri L_sec 0.99     ; 磁耦合系数
+
+** 隔离耦合电容 **
+C_iso TXs1 B 1uF        ; 副边一头通过电容接在中间节点B
+* 变压器副边另一头直接接在节点C (或根据图示连接)
+W_conn TXs2 C           ; 假设直接连接
+
+** 四串联 MOSFET 桥臂 **
+M1 10 g1 A A NMOS       ; 最上方开关
+M2 A  g2 B B NMOS       ; 第二个开关
+M3 B  g3 C C NMOS       ; 第三个开关
+M4 C  g4 0 0 NMOS       ; 最下方开关
+
+** 输出 LC 滤波器与直流源 **
+L_filter 10 OUT 1mH     ; 输出电感
+C_filter OUT 0 470uF    ; 输出滤波电容
+V_dc_out 15 0 DC 400V   ; 右侧主直流源
+R_load 15 OUT 10        ; 负载电阻连接在输出端
+
+** 仿真指令 **
+.model NMOS NMOS(Vto=4)
+.tran 1u 10m
+.end

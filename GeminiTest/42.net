@@ -1,0 +1,23 @@
+* Boost Converter Netlist (42.png)
+* 节点定义: 1:Vin, 2:Switch_Node, 3:Vout, 0:GND
+
+** 输入电源 **
+Vbat 1 0 DC 5V          ; 假设电池输入为 5V
+
+** 功率级元件 **
+L1 1 2 100uH            ; 升压电感
+Q1 2 base 0 NPN         ; NPN型三极管作为开关 (base需外接信号)
+D1 2 3 MyDiode          ; 整流二极管 (阳极接2, 阴极接3)
+
+** 输出滤波与负载 **
+Cout 3 0 47uF           ; 输出滤波电容
+Rload 3 0 50            ; 负载电阻
+
+** 模型与驱动指令 **
+.model MyDiode D
+.model NPN NPN(Bf=100)  ; 基础BJT模型
+* 驱动三极管需要基极电流，这里简化为电压源加限流电阻
+V_drive base_source 0 PULSE(0 5 0 1n 1n 5u 10u)
+Rb base_source base 1k  ; 基极限流电阻
+.tran 1n 5m             ; 瞬态分析 5ms
+.end
