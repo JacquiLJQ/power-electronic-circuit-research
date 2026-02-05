@@ -8,5 +8,5 @@ python gen.py --out out_circuits --n 20 --seed 56 --W 35 --H 30 --density 1 --p_
 ## wire_component_connections.py usage
 
 ```bash
-python wire_component_connections.py --image path/to/image.jpg --json  path/to/json.json
+python wire_component_connections.py --image path/to/image.jpg --json path/to/json.json
 ```
