@@ -38,6 +38,58 @@ CELL_H = 3.0 * COMP_SIZE
 CELL_PAD = 1.5 * COMP_SIZE
 
 
+YOLO_CLASSES = [
+    "battery",  # 电压源（battery/battery1/vsourceAM）
+    "cap",  # C / cC
+    "curr_src",  # isourceAM
+    "diode",  # D* / sD*
+    "inductor",  # L
+    "resistor",  # R
+    "swi_ideal",  # spst
+    "swi_real",  # nigfete / nigbt
+    "volt_src",  # （如果你坚持和 battery 分开，就把 vsourceAM 放这里）
+    "xformer",  # transformer core
+]
+CLASS_ID = {c: i for i, c in enumerate(YOLO_CLASSES)}
+
+
+def map_ctype_to_yolo(ctype: str) -> str:
+    # bipoles
+    if ctype == "R":
+        return "resistor"
+    if ctype in ("C", "cC"):
+        return "cap"
+    if ctype == "L":
+        return "inductor"
+    if ctype in ("D*", "sD*"):
+        return "diode"
+
+    # sources
+    if ctype in ("battery", "battery1"):
+        return "battery"
+    if ctype == "vsourceAM":
+        return "volt_src"
+    if ctype == "isourceAM":
+        return "curr_src"
+
+    # switches
+    if ctype == "spst":
+        return "swi_ideal"
+    if ctype in ("nigfete", "nigbt"):
+        return "swi_real"
+
+    # transformer
+    if ctype == "transformer core":
+        return "xformer"
+
+    # things you probably DON'T want to detect as objects in YOLO
+    # (wires / topology artifacts)
+    if ctype in ("junction", "crossing", "ground", "tlground"):
+        return ""  # skip
+
+    return ""  # unknown -> skip
+
+
 def cell_origin(i, cols):
     r = i // cols
     c = i % cols
@@ -118,42 +170,94 @@ def build_component_catalog() -> List[Dict[str, Any]]:
     """
     return [
         # Bipoles / sources
-        {"kind": "to", "ctype": "R", "element": "R", "label": r"$R_{%d}$"},
-        {"kind": "to", "ctype": "C", "element": "C", "label": r"$C_{%d}$"},
         {
-            "kind": "to",
+            "kind": "node",
+            "ctype": "R",
+            "node": "resistorshape",
+            # "element": "R",
+            # "label": r"$R_{%d}$",
+            "text": "",
+        },
+        {
+            "kind": "node",
+            "ctype": "C",
+            "node": "capacitorshape",
+            # "element": "C",
+            # "label": r"$C_{%d}$",
+            "text": "",
+        },
+        {
+            "kind": "node",
             "ctype": "cC",
-            "element": "cC",
-            "label": r"$C_{%d}$",
+            "node": "ccapacitorshape",
+            # "element": "cC",
+            # "label": r"$C_{%d}$",
+            "text": "",
         },  # polarized curved
-        {"kind": "to", "ctype": "L", "element": "L", "label": r"$L_{%d}$"},
-        {"kind": "to", "ctype": "D*", "element": "D*", "label": r"$D_{%d}$"},
         {
-            "kind": "to",
+            "kind": "node",
+            "ctype": "L",
+            "node": "cuteinductorshape",
+            # "element": "L",
+            # "label": r"$L_{%d}$",
+            "text": "",
+        },
+        {
+            "kind": "node",
+            "ctype": "D*",
+            "node": "emptydiodeshape",
+            # "element": "D*",
+            # "label": r"$D_{%d}$",
+            "text": "",
+        },
+        {
+            "kind": "node",
             "ctype": "sD*",
-            "element": "sD*",
-            "label": r"$D_{%d}$",
+            "node": "emptysdiodeshape",
+            # "element": "sD*",
+            # "label": r"$D_{%d}$",
+            "text": "",
         },  # schottky
-        {"kind": "to", "ctype": "battery", "element": "battery", "label": r"$V_{%d}$"},
         {
-            "kind": "to",
+            "kind": "node",
+            "ctype": "battery",
+            "node": "batteryshape",
+            # "element": "battery",
+            # "label": r"$V_{%d}$",
+            "text": "",
+        },
+        {
+            "kind": "node",
             "ctype": "battery1",
-            "element": "battery1",
-            "label": r"$V_{%d}$",
+            "node": "battery1shape",
+            # "element": "battery1",
+            # "label": r"$V_{%d}$",
+            "text": "",
         },
         {
-            "kind": "to",
+            "kind": "node",
             "ctype": "vsourceAM",
-            "element": "vsourceAM",
-            "label": r"$V_{%d}$",
+            "node": "vsourceAMshape",
+            # "element": "vsourceAM",
+            # "label": r"$V_{%d}$",
+            "text": "",
         },
         {
-            "kind": "to",
+            "kind": "node",
             "ctype": "isourceAM",
-            "element": "isourceAM",
-            "label": r"$I_{%d}$",
+            "node": "isourceAMshape",
+            # "element": "isourceAM",
+            # "label": r"$I_{%d}$",
+            "text": "",
         },
-        {"kind": "to", "ctype": "spst", "element": "spst", "label": r"$S_{%d}$"},
+        {
+            "kind": "node",
+            "ctype": "spst",
+            "node": "cspstshape",
+            # "element": "spst",
+            # "label": r"$S_{%d}$",
+            "text": "",
+        },
         # Node components
         {"kind": "node", "ctype": "nigfete", "node": "nigfete", "text": "Q"},
         {"kind": "node", "ctype": "nigbt", "node": "nigbt", "text": "Q"},
@@ -677,11 +781,19 @@ class CircuitGenerator:
         random.seed(seed)
 
     def _pick_component(self) -> Dict[str, Any]:
-        """
-        Mixed sampler: tends to include node components frequently enough.
-        """
-        if self.cat_node and random.random() < self.node_bias:
-            # Prefer transistors when sampling node components
+        # 如果某一类为空，直接从另一类选
+        if not self.cat_to and not self.cat_node:
+            raise RuntimeError(
+                "Component catalog is empty. Check build_component_catalog()."
+            )
+
+        if not self.cat_to:
+            return random.choice(self.cat_node)
+        if not self.cat_node:
+            return random.choice(self.cat_to)
+
+        # 两类都存在时：按 node_bias 混合采样
+        if random.random() < self.node_bias:
             if self.node_transistors and random.random() < 0.85:
                 return random.choice(self.node_transistors)
             return random.choice(self.cat_node)
@@ -713,20 +825,15 @@ class CircuitGenerator:
         comp_counter: Dict[str, int],
     ) -> str:
         """
-        Build a path along pts: p0 -> p1 -> ... -> pn
-        Each sub-segment becomes:
-          - bipole (to[...])
-          - OR insert node at segment midpoint and connect with short wires
+        Now each segment is drawn as its own \draw so each component can have its own local bounding box.
         """
         lines: List[str] = []
         cur = pts[0]
-        path_parts = [f"\\draw {fmt_pt(cur)}"]
 
         for i in range(1, len(pts)):
             nxt = pts[i]
             comp = self._pick_component()
 
-            # decide if node insertion happens for this segment
             use_node = (comp["kind"] == "node") and (
                 random.random() < self.p_node_component
             )
@@ -746,7 +853,13 @@ class CircuitGenerator:
                 if random.random() < self.p_junction:
                     junction_suffix = random.choice([", -*", ", *-", ", *-*"])
 
-                path_parts.append(f" to[{elem_opts}{junction_suffix}] {fmt_pt(nxt)}")
+                bbox_name = f"{ctype}_{idx}BB"
+                # IMPORTANT: component alone in a scope
+                lines.append(rf"\begin{{scope}}[local bounding box={bbox_name}]")
+                lines.append(
+                    rf"\draw {fmt_pt(cur)} to[{elem_opts}{junction_suffix}] {fmt_pt(nxt)};"
+                )
+                lines.append(r"\end{scope}")
 
                 gt.append(
                     ComponentGT(
@@ -763,8 +876,9 @@ class CircuitGenerator:
                         },
                     )
                 )
+
             else:
-                # Insert node at midpoint; connect with short wires
+                # Insert node at midpoint; draw short wire + node + short wire
                 node = comp.get("node", comp["ctype"])
                 ctype = comp["ctype"]
                 comp_counter.setdefault(ctype, 0)
@@ -774,22 +888,24 @@ class CircuitGenerator:
                 m = midpoint(cur, nxt)
                 txt = comp.get("text", "")
 
-                # terminate current path at m
-                path_parts.append(f" to[short] {fmt_pt(m)};")
-                lines.append("".join(path_parts))
+                # wire cur -> m
+                lines.append(rf"\draw {fmt_pt(cur)} to[short] {fmt_pt(m)};")
 
-                # draw node
+                # node itself in bbox scope
+                bbox_name = f"{ctype}_{idx}BB"
+                lines.append(rf"\begin{{scope}}[local bounding box={bbox_name}]")
                 if txt:
-                    lines.append(f"\\draw {fmt_pt(m)} node[{node}]{{{txt}}};")
+                    lines.append(rf"\draw {fmt_pt(m)} node[{node}]{{{txt}}};")
                 else:
-                    lines.append(f"\\draw {fmt_pt(m)} node[{node}]{{}};")
+                    lines.append(rf"\draw {fmt_pt(m)} node[{node}]{{}};")
+                lines.append(r"\end{scope}")
 
-                # continue wire to nxt (optionally with junction)
+                # wire m -> nxt (optional junction marker)
                 junction = ""
                 if random.random() < self.p_junction:
                     junction = random.choice(["-*", "*-", "*-*"])
                 opts = "short" + (f", {junction}" if junction else "")
-                path_parts = [f"\\draw {fmt_pt(m)} to[{opts}] {fmt_pt(nxt)}"]
+                lines.append(rf"\draw {fmt_pt(m)} to[{opts}] {fmt_pt(nxt)};")
 
                 gt.append(
                     ComponentGT(
@@ -803,8 +919,6 @@ class CircuitGenerator:
 
             cur = nxt
 
-        path_parts.append(";")
-        lines.append("".join(path_parts))
         return "\n".join(lines)
 
     def _optional_crossing_and_branch(self, gt: List[ComponentGT]) -> str:
@@ -858,23 +972,56 @@ class CircuitGenerator:
 
         return "\n".join(lines)
 
-    def _latex_doc(self, tikz_body: str) -> str:
-        # x/y fixed scale makes geometry stable for later bbox mapping
+    def _latex_doc(self, tikz_body: str, labels_filename: str) -> str:
+        # labels_filename 只传文件名，不传路径（LaTeX 在 workdir 里写）
         return rf"""
-\documentclass[border=2pt]{{standalone}}
-\usepackage[siunitx]{{circuitikz}}
-\usetikzlibrary{{arrows.meta,calc}}
+    \documentclass[border=2pt]{{standalone}}
+    \usepackage[siunitx]{{circuitikz}}
+    \usepackage{{pgfmath}}
+    \usetikzlibrary{{arrows.meta,calc}}
 
-\begin{{document}}
-\begin{{circuitikz}}[
-american voltages,
-american currents,
-x=1cm, y=1cm
-]
-{tikz_body}
-\end{{circuitikz}}
-\end{{document}}
-""".strip()
+    \begin{{document}}
+
+    % ---- write YOLO labels to file ----
+    \newwrite\posfile
+    \immediate\openout\posfile={labels_filename}
+
+    \begin{{circuitikz}}[
+    american voltages,
+    american currents,
+    x=1cm, y=1cm
+    ]
+    {tikz_body}
+
+    % ---- helper: compute normalized YOLO bbox for a given local bounding box ----
+    \newcommand{{\WriteYoloBBox}}[2]{{%
+    % #1 = bbox name (without parentheses), #2 = class id
+    \path (#1.south west); \pgfgetlastxy{{\rOneMinX}}{{\rOneMinY}}
+    \path (#1.north east); \pgfgetlastxy{{\rOneMaxX}}{{\rOneMaxY}}
+
+    \path (current bounding box.south west); \pgfgetlastxy{{\canvasminx}}{{\canvasminy}}
+    \path (current bounding box.north east); \pgfgetlastxy{{\canvasmaxx}}{{\canvasmaxy}}
+
+    \newdimen\canvaswidth
+    \newdimen\canvasheight
+    \pgfmathsetlength{{\canvaswidth}}{{\canvasmaxx-\canvasminx}}
+    \pgfmathsetlength{{\canvasheight}}{{\canvasmaxy-\canvasminy}}
+
+    \pgfmathsetmacro{{\widthratio}}{{(\rOneMaxX-\rOneMinX)/(\canvaswidth)}}
+    \pgfmathsetmacro{{\heightratio}}{{(\rOneMaxY-\rOneMinY)/(\canvasheight)}}
+    \pgfmathsetmacro{{\xpositionratio}}{{(\rOneMinX+\rOneMaxX-\canvasminx-\canvasminx)/2/(\canvaswidth)}}
+    \pgfmathsetmacro{{\ypositionratio}}{{1-(\rOneMinY+\rOneMaxY-\canvasminy-\canvasminy)/2/(\canvasheight)}}
+
+    \immediate\write\posfile{{#2\space \xpositionratio\space \ypositionratio\space \widthratio\space \heightratio}}
+    }}
+
+    % ---- YOLO exports inserted here ----
+    %__YOLO_EXPORTS__
+
+    \end{{circuitikz}}
+    \immediate\closeout\posfile
+    \end{{document}}
+    """.strip()
 
     def _compile_tex_to_pdf(self, tex_path: str, workdir: str) -> str:
         pdf_path = os.path.splitext(tex_path)[0] + ".pdf"
@@ -1092,7 +1239,20 @@ x=1cm, y=1cm
         self._ensure_both_kinds(gt, comp_counter, tikz_lines)
 
         tikz_body = "\n".join(tikz_lines)
-        tex = self._latex_doc(tikz_body)
+        # Build YOLO export commands from gt list
+        yolo_exports = []
+        for comp in gt:
+            yolo_cls = map_ctype_to_yolo(comp.ctype)
+            if not yolo_cls:
+                continue
+            cid = CLASS_ID[yolo_cls]
+            bbox_name = f"{comp.name}BB"  # must match what we used in drawing
+            yolo_exports.append(rf"\WriteYoloBBox{{{bbox_name}}}{{{cid}}}")
+
+        # tex = self._latex_doc(tikz_body)
+        labels_filename = "labels.txt"
+        tex = self._latex_doc(tikz_body, labels_filename=labels_filename)
+        tex = tex.replace("%__YOLO_EXPORTS__", "\n".join(yolo_exports))
 
         # Paths
         ensure_dir(self.out_dir)
@@ -1103,6 +1263,7 @@ x=1cm, y=1cm
         pdf_path = os.path.join(sample_dir, "circuit.pdf")
         png_path = os.path.join(sample_dir, "circuit.png")
         gt_path = os.path.join(sample_dir, "ground_truth.json")
+        labels_path = os.path.join(sample_dir, "labels.txt")
 
         with open(tex_path, "w", encoding="utf-8") as f:
             f.write(tex)
