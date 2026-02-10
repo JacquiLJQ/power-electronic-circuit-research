@@ -39,6 +39,7 @@ CELL_PAD = 1.5 * COMP_SIZE
 
 
 YOLO_CLASSES = [
+    "ac_src",
     "battery",  # 电压源（battery/battery1/vsourceAM）
     "cap",  # C / cC
     "curr_src",  # isourceAM
@@ -81,6 +82,8 @@ def map_ctype_to_yolo(ctype: str) -> str:
     # transformer
     if ctype == "transformer core":
         return "xformer"
+    if ctype == "sV":
+        return "ac_src"
 
     # things you probably DON'T want to detect as objects in YOLO
     # (wires / topology artifacts)
@@ -174,6 +177,14 @@ def build_component_catalog() -> List[Dict[str, Any]]:
             "kind": "node",
             "ctype": "R",
             "node": "resistorshape",
+            # "element": "R",
+            # "label": r"$R_{%d}$",
+            "text": "",
+        },
+        {
+            "kind": "node",
+            "ctype": "sV",
+            "node": "vsourcesinshape",
             # "element": "R",
             # "label": r"$R_{%d}$",
             "text": "",
@@ -1262,7 +1273,7 @@ class CircuitGenerator:
         tex_path = os.path.join(sample_dir, "circuit.tex")
         pdf_path = os.path.join(sample_dir, "circuit.pdf")
         png_path = os.path.join(sample_dir, "circuit.png")
-        gt_path = os.path.join(sample_dir, "ground_truth.json")
+        # gt_path = os.path.join(sample_dir, "ground_truth.json")
         labels_path = os.path.join(sample_dir, "labels.txt")
 
         with open(tex_path, "w", encoding="utf-8") as f:
@@ -1279,25 +1290,25 @@ class CircuitGenerator:
         self._pdf_to_png(pdf_path, png_path, dpi=300)
 
         # Save GT (graph + component geometry)
-        gt_payload = {
-            "seed": self.seed,
-            "index": idx,
-            "template_name": wt.name,
-            "canvas": {"W": self.W, "H": self.H},
-            "graph": {
-                "nodes": {k: {"x": v[0], "y": v[1]} for k, v in wt.nodes.items()},
-                "edges": [{"u": u, "v": v} for (u, v) in wt.edges],
-                "junctions": wt.junctions,
-                "crossings": [
-                    {"a": {"x": a[0], "y": a[1]}, "b": {"x": b[0], "y": b[1]}}
-                    for (a, b) in wt.crossings
-                ],
-            },
-            "components": [asdict(x) for x in gt],
-        }
+        # gt_payload = {
+        #     "seed": self.seed,
+        #     "index": idx,
+        #     "template_name": wt.name,
+        #     "canvas": {"W": self.W, "H": self.H},
+        #     "graph": {
+        #         "nodes": {k: {"x": v[0], "y": v[1]} for k, v in wt.nodes.items()},
+        #         "edges": [{"u": u, "v": v} for (u, v) in wt.edges],
+        #         "junctions": wt.junctions,
+        #         "crossings": [
+        #             {"a": {"x": a[0], "y": a[1]}, "b": {"x": b[0], "y": b[1]}}
+        #             for (a, b) in wt.crossings
+        #         ],
+        #     },
+        #     "components": [asdict(x) for x in gt],
+        # }
 
-        with open(gt_path, "w", encoding="utf-8") as f:
-            json.dump(gt_payload, f, indent=2, ensure_ascii=False)
+        # with open(gt_path, "w", encoding="utf-8") as f:
+        #     json.dump(gt_payload, f, indent=2, ensure_ascii=False)
 
     def generate(self) -> None:
         for i in range(self.n):
