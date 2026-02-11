@@ -14,3 +14,6 @@ yolo_dataset/
 
 testset/
 testset11cls/
+
+component_dataset/
+yolo_dataset_mix/
