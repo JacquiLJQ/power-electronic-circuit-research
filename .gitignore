@@ -17,3 +17,5 @@ testset11cls/
 
 component_dataset/
 yolo_dataset_mix/
+ranked_images/
+datasets/
