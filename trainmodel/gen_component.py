@@ -185,6 +185,100 @@ def yolo_line(cls_id, box, W, H):
     return f"{cls_id} {cx:.6f} {cy:.6f} {bw:.6f} {bh:.6f}"
 
 
+def augment_component_cv(
+    img: np.ndarray,
+    p=0.8,
+    bin_thresh=200,
+    max_kernel=3,
+    do_skeleton=False,
+):
+    """
+    Component-level morphology augmentation.
+    Assumes: white background (255), black strokes (0).
+    Output keeps same convention.
+    """
+    if random.random() > p:
+        return img
+
+    # --- binarize ---
+    # foreground: black stroke -> 1, background -> 0 (for morphology convenience)
+    # If your convention is inverted, swap the THRESH_BINARY / THRESH_BINARY_INV.
+    _, bw = cv2.threshold(img, bin_thresh, 255, cv2.THRESH_BINARY_INV)  # strokes=255
+    bw01 = (bw > 0).astype(np.uint8)  # strokes=1
+
+    # choose a small kernel
+    k = random.randint(1, max_kernel)  # 1..3
+    kernel = cv2.getStructuringElement(
+        random.choice([cv2.MORPH_RECT, cv2.MORPH_ELLIPSE]),
+        (2 * k + 1, 2 * k + 1),
+    )
+
+    op = random.choice(["gradient"])  # "erode", "open", "close", "mix",
+    it = 1  # random.choice([1, 1, 2])  # mostly 1, sometimes 2
+
+    m = (bw01 * 255).astype(np.uint8)
+
+    if op == "erode":
+        m = cv2.erode(m, kernel, iterations=it)
+    # elif op == "dilate":
+    #     m = cv2.dilate(m, kernel, iterations=it)
+    elif op == "gradient":
+        m = cv2.morphologyEx(m, cv2.MORPH_GRADIENT, kernel, iterations=it)
+    elif op == "open":
+        m = cv2.morphologyEx(m, cv2.MORPH_OPEN, kernel, iterations=it)
+    elif op == "close":
+        m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, kernel, iterations=it)
+    else:  # mix: small random chain
+        if random.random() < 0.5:
+            m = cv2.erode(m, kernel, iterations=1)
+        if random.random() < 0.5:
+            m = cv2.dilate(m, kernel, iterations=1)
+        if random.random() < 0.3:
+            m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, kernel, iterations=1)
+
+    # Optional: create tiny breaks or bridges (topology robustness)
+    # break: open with tiny kernel
+    if random.random() < 0.15:
+        k2 = 1
+        ker2 = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+        m = cv2.morphologyEx(m, cv2.MORPH_OPEN, ker2, iterations=1)
+
+    # bridge: close with tiny kernel
+    if random.random() < 0.15:
+        ker2 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+        m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, ker2, iterations=1)
+
+    # Optional skeletonization (keeps connectivity + reduces thickness)
+    # This is heavier; use low probability or offline preprocess.
+    if do_skeleton and random.random() < 0.2:
+        m = skeletonize_binary_255(m)
+
+    # convert back to original convention: strokes black(0), bg white(255)
+    out = np.where(m > 0, 0, 255).astype(np.uint8)
+    return out
+
+
+def skeletonize_binary_255(m255: np.ndarray) -> np.ndarray:
+    """
+    m255: foreground=255, background=0
+    returns same convention.
+    Classic morphological skeletonization.
+    """
+    img = (m255 > 0).astype(np.uint8) * 255
+    skel = np.zeros_like(img)
+    element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+
+    while True:
+        eroded = cv2.erode(img, element)
+        opened = cv2.dilate(eroded, element)
+        temp = cv2.subtract(img, opened)
+        skel = cv2.bitwise_or(skel, temp)
+        img = eroded.copy()
+        if cv2.countNonZero(img) == 0:
+            break
+    return skel
+
+
 # ----------------------------
 # Generate one image
 # ----------------------------
@@ -214,6 +308,7 @@ def generate_one(
 
         gray = read_gray(asset)
         inv = invert_component(gray)  # your requirement
+        inv = augment_component_cv(inv, p=0.2, max_kernel=2)
         comp = crop_to_content(inv)  # must crop, otherwise huge box
         if comp is None:
             continue
@@ -462,7 +557,7 @@ def main():
             choose_free=args.choose_free,
         )
 
-        stem = f"{i:06d}"
+        stem = f"batch2-{i:06d}"
         img_path = out_root / "images" / sp / f"{stem}.png"
         lbl_path = out_root / "labels" / sp / f"{stem}.txt"
 

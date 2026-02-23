@@ -270,8 +270,8 @@ def build_component_catalog() -> List[Dict[str, Any]]:
             "text": "",
         },
         # Node components
-        {"kind": "node", "ctype": "nigfete", "node": "nigfete", "text": "Q"},
-        {"kind": "node", "ctype": "nigbt", "node": "nigbt", "text": "Q"},
+        {"kind": "node", "ctype": "nigfete", "node": "nigfete", "text": ""},
+        {"kind": "node", "ctype": "nigbt", "node": "nigbt", "text": ""},
         {
             "kind": "node",
             "ctype": "transformer core",
