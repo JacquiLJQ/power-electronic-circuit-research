@@ -325,6 +325,7 @@ def generate_one(image_path: str, label_path: str, seed: int = None):
     spanx = dxmax - dxmin
     spany = dymax - dymin
     d.save(image_path, transparent=False)  # , dpi=DPI, transparent=False)
+    matplotlib.pyplot.close()
 
     # -----------------------------
     # Read saved image size (pixels)
@@ -414,7 +415,7 @@ if __name__ == "__main__":
     # generate_dataset("synthetic_schemdraw_dataset", n_images=500, val_ratio=0.2, seed=42)
     generate_dataset(
         "synthetic_schemdraw_dataset",
-        n_images=10,
+        n_images=2500,
         val_ratio=0.2,
-        seed=42,
+        seed=37,
     )
