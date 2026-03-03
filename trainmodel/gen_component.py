@@ -187,7 +187,7 @@ def yolo_line(cls_id, box, W, H):
 
 def augment_component_cv(
     img: np.ndarray,
-    p=0.8,
+    p=1,
     bin_thresh=200,
     max_kernel=3,
     do_skeleton=False,
@@ -293,6 +293,7 @@ def generate_one(
     size_jitter=0.25,
     choose_free="largest",
     max_free_rects=2000,
+    need_wire=False,
 ):
 
     canvas = np.full((H, W), 255, dtype=np.uint8)  # white bg
@@ -308,7 +309,7 @@ def generate_one(
 
         gray = read_gray(asset)
         inv = invert_component(gray)  # your requirement
-        inv = augment_component_cv(inv, p=0.2, max_kernel=2)
+        # inv = augment_component_cv(inv, p=1, max_kernel=2)
         comp = crop_to_content(inv)  # must crop, otherwise huge box
         if comp is None:
             continue
@@ -358,13 +359,14 @@ def generate_one(
             free_rects = prune_free_rects(free_rects)
 
         # === draw simple wires (visual only) ===
-    if len(comp_boxes) >= 2:
-        draw_simple_wires(
-            canvas,
-            comp_boxes,
-            n_wires=random.randint(4, 8),
-            thickness=random.choice([1, 2]),
-        )
+    # if need_wire:
+    #     if len(comp_boxes) >= 2:
+    #         draw_simple_wires(
+    #             canvas,
+    #             comp_boxes,
+    #             n_wires=random.randint(4, 8),
+    #             thickness=random.choice([1, 2]),
+    #         )
 
     return canvas, labels
 
@@ -479,7 +481,7 @@ def main():
     ap.add_argument(
         "--component_root",
         type=str,
-        required=True,
+        default="../componentnet/component/",
         help="Root dir containing class subfolders of PNGs",
     )
     ap.add_argument(
@@ -488,6 +490,7 @@ def main():
     ap.add_argument("--n", type=int, default=1, help="Number of images to generate")
     ap.add_argument("--W", type=int, default=1024)
     ap.add_argument("--H", type=int, default=1024)
+    ap.add_argument("--wire", type=bool, default=False, help="if need wire")
     ap.add_argument("--k", type=int, default=10, help="Components per image")
     ap.add_argument(
         "--pad", type=int, default=4, help="Padding around bbox to keep spacing"
@@ -497,7 +500,7 @@ def main():
         "--split",
         type=float,
         nargs=3,
-        default=(0.8, 0.1, 0.1),
+        default=(1, 0, 0),
         help="train/val/test ratios",
     )
     ap.add_argument(
@@ -555,9 +558,10 @@ def main():
             target_long_side=args.target,
             size_jitter=args.jitter,
             choose_free=args.choose_free,
+            need_wire=args.wire,
         )
 
-        stem = f"batch2-{i:06d}"
+        stem = f"nowire-{i:06d}"
         img_path = out_root / "images" / sp / f"{stem}.png"
         lbl_path = out_root / "labels" / sp / f"{stem}.txt"
 

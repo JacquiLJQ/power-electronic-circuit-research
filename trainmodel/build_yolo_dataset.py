@@ -247,8 +247,8 @@ def main():
         default="yolo_dataset",
         help="output YOLO dataset root",
     )
-    ap.add_argument("--val_ratio", type=float, default=0.10, help="e.g. 0.10")
-    ap.add_argument("--test_ratio", type=float, default=0.10, help="e.g. 0.10")
+    ap.add_argument("--val_ratio", type=float, default=0, help="e.g. 0.10")
+    ap.add_argument("--test_ratio", type=float, default=0, help="e.g. 0.10")
     ap.add_argument(
         "--no_run_gen",
         action="store_true",

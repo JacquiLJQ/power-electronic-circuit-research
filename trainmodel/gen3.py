@@ -309,16 +309,17 @@ def generate_one(image_path: str, label_path: str, seed: int = None):
         drawn_elements.append((p.cls, elem))
 
     # Draw wires
-    wires_n = random.randint(*WIRES_RANGE)
-    for _ in range(wires_n):
-        a, b = random.sample(placed, 2)
-        p1 = random_point_on_rect_edge(a.rect)
-        p2 = random_point_on_rect_edge(b.rect)
-        path = l_shaped_path(p1, p2)
+    # if needWire:
+    #     wires_n = random.randint(*WIRES_RANGE)
+    #     for _ in range(wires_n):
+    #         a, b = random.sample(placed, 2)
+    #         p1 = random_point_on_rect_edge(a.rect)
+    #         p2 = random_point_on_rect_edge(b.rect)
+    #         path = l_shaped_path(p1, p2)
 
-        for s in range(len(path) - 1):
-            (x1, y1), (x2, y2) = path[s], path[s + 1]
-            d += elm.Line().at((x1, y1)).to((x2, y2))
+    #         for s in range(len(path) - 1):
+    #             (x1, y1), (x2, y2) = path[s], path[s + 1]
+    #             d += elm.Line().at((x1, y1)).to((x2, y2))
 
     # fig = d.draw(show=False)
     dxmin, dymin, dxmax, dymax = d.get_bbox()
@@ -361,7 +362,11 @@ def generate_one(image_path: str, label_path: str, seed: int = None):
 # Dataset loop + split
 # -----------------------------
 def generate_dataset(
-    out_dir: str, n_images: int = 200, val_ratio: float = 0.2, seed: int = 0
+    out_dir: str,
+    n_images: int = 200,
+    val_ratio: float = 0.2,
+    seed: int = 0,
+    needWire: bool = True,
 ):
     random.seed(seed)
     np.random.seed(seed)
@@ -385,8 +390,8 @@ def generate_dataset(
 
     for i in range(n_images):
         split = "val" if i in val_set else "train"
-        img_path = os.path.join(out_dir, "images", split, f"{i:06d}.png")
-        lab_path = os.path.join(out_dir, "labels", split, f"{i:06d}.txt")
+        img_path = os.path.join(out_dir, "images", split, f"s2{i:06d}.png")
+        lab_path = os.path.join(out_dir, "labels", split, f"s2{i:06d}.txt")
 
         # Different seed per image for reproducibility
         generate_one(img_path, lab_path, seed=seed + i)
@@ -413,9 +418,4 @@ def generate_dataset(
 if __name__ == "__main__":
     # Example:
     # generate_dataset("synthetic_schemdraw_dataset", n_images=500, val_ratio=0.2, seed=42)
-    generate_dataset(
-        "synthetic_schemdraw_dataset",
-        n_images=2500,
-        val_ratio=0.2,
-        seed=37,
-    )
+    generate_dataset("synthetic_schemdraw_dataset", n_images=2500, val_ratio=0, seed=11)
