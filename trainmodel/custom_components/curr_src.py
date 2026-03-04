@@ -11,30 +11,37 @@ class CurrentSourceCustom(Element):
     Current source: circle with arrow.
     """
 
-    _element_defaults = {
-        "arrowwidth": 0.15,
-        "arrowlength": 0.25,
-        "arrow_lw": None,
-        "arrow_color": None,
-    }
+    # _element_defaults = {
+    #     "arrowwidth": 0.15,
+    #     "arrowlength": 0.25,
+    #     "arrow_lw": None,
+    #     "arrow_color": None,
+    # }
 
-    def __init__(self, length=2.2, radius=0.35, lw=1.5):
-        super().__init__()
+    def __init__(
+        self,
+        arrowwidth=0.3,  # 三角形尖尖的宽
+        arrowlength=0.25,  # 三角形尖尖的长
+        arrowlw=1,
+        r=0.5,
+        theta=90,
+        arrowstart=0.2,  # 线段(尾巴)起始
+        arrowtaillength=0.6,  # 线段(尾巴)长
+        circlelw=1,  # 外圈圆形线宽
+        **kwargs
+    ):
+        super().__init__(**kwargs)
         self.segments.append(Segment([(0, 0), (0, 0), gap, (1, 0), (1, 0)]))
-        self.segments.append(
-            SegmentCircle(
-                (0.5, 0),
-                0.5,
-            )
-        )
-        self.elmparams["theta"] = 90
+        self.segments.append(SegmentCircle((0.5, 0), r, lw=circlelw))
+        self.elmparams["theta"] = theta
         self.segments.append(
             Segment(
-                [(0.25, 0), (0.75, 0)],
+                [(arrowstart, 0), (arrowstart + arrowtaillength, 0)],
                 arrow="->",
-                arrowwidth=self.params["arrowwidth"],
-                arrowlength=self.params["arrowlength"],
-                lw=self.params["arrow_lw"],
-                color=self.params["arrow_color"],
+                arrowwidth=arrowwidth,
+                arrowlength=arrowlength,
+                lw=arrowlw,
+                color="black",
+                fill=None,
             )
         )

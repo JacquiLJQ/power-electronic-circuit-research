@@ -24,7 +24,7 @@ def make_component(cls: str):
     if cls == "volt_src":
         return VoltageSourceCustom()
     if cls == "curr_src":
-        return CurrentSourceCustom()
+        return CurrentSourceCustom()  # customized
     if cls == "battery":
         return BatteryCustom()  # customized
     if cls == "cap":
