@@ -181,9 +181,9 @@ def make_element(cls: str, angle: int):
         return elm.Switch()
     if cls == "swi_real":
         # "real" switch: use MOSFET symbol as a proxy (common in power electronics)
-        return elm.NMos()
+        return elm.NMos()  # 这里可以用原版的swi（transistors）因为已经有很多变体了
     if cls == "xformer":
-        return elm.Transformer()
+        return elm.Transformer()  # 这里可以用一些原版的，再用一些定制的
     raise ValueError(f"Unknown class: {cls}")
 
 

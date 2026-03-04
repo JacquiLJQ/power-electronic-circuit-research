@@ -1,3 +1,5 @@
+from schemdraw.elements import Element
+
 import schemdraw
 
 from resistor import ResistorCustom
@@ -13,7 +15,7 @@ from xformer import TransformerCustom
 from volt_src import VoltageSourceCustom
 
 import inspect
-from schemdraw.segments import SegmentArc, SegmentBezier, SegmentCircle
+from schemdraw.segments import Segment, SegmentArc, SegmentBezier, SegmentCircle
 
 
 def make_component(cls: str):
@@ -42,15 +44,20 @@ def make_component(cls: str):
     raise ValueError(f"Unknown component class: {cls}")
 
 
+class BBoxRect(Element):
+    def __init__(self, xmin, ymin, xmax, ymax, lw=0.8):
+        super().__init__()
+        self.segments.append(Segment([(xmin, ymin), (xmax, ymin)], lw=lw))
+        self.segments.append(Segment([(xmax, ymin), (xmax, ymax)], lw=lw))
+        self.segments.append(Segment([(xmax, ymax), (xmin, ymax)], lw=lw))
+        self.segments.append(Segment([(xmin, ymax), (xmin, ymin)], lw=lw))
+
+
 # =========================
 # DRAW TEST SECTION
 # =========================
 
 if __name__ == "__main__":
-
-    # print("SegmentArc:", inspect.signature(SegmentArc.__init__))
-    # print("SegmentBezier:", inspect.signature(SegmentBezier.__init__))
-    # print("SegmentCircle:", inspect.signature(SegmentCircle.__init__))
 
     component_list = [
         "ac_src",
@@ -62,27 +69,35 @@ if __name__ == "__main__":
         "inductor",
         "resistor",
         "swi_ideal",
-        "swi_real",
         "xformer",
+        "swi_real",
     ]
 
     dx = 4.0
     dy = 3.0
     cols = 4
+    d = schemdraw.Drawing()
 
-    with schemdraw.Drawing() as d:
+    for i, name in enumerate(component_list):
+        r, c = divmod(i, cols)
+        x, y = c * dx, -r * dy
 
-        for i, name in enumerate(component_list):
-            r = i // cols
-            c = i % cols
+        elem = make_component(name)
+        d += elem.at((x, y))
+        elem.label(name, loc="bottom")
 
-            x = c * dx
-            y = -r * dy
+        # --- 1) 元件自身 bbox（未应用 transform） ---
+        bb_local = elem.get_bbox(transform=False, includetext=False)
+        print(name, "local bbox (no transform, no text):", bb_local)
 
-            elem = make_component(name)
-            print("drawing", name)
+        # --- 2) 放到 drawing 里的 bbox（应用 transform） ---
+        bb_world = elem.get_bbox(transform=True, includetext=False)
+        print(name, "world bbox (transform, no text):", bb_world)
 
-            d += elem.at((x, y))
-            elem.label(name, loc="bottom")
+        # 画 world bbox 框出来（你也可以画 local bbox，但要手动加偏移/变换，麻烦）
+        xmin, ymin, xmax, ymax = bb_world
+        d += BBoxRect(xmin, ymin, xmax, ymax, lw=0.8)
 
-        d.draw()
+    d.draw(show=True)
+    # d.save("bbox_debug.svg")
+    # print("Saved bbox_debug.svg")

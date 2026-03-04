@@ -1,80 +1,188 @@
-from schemdraw.elements import Element
+from __future__ import annotations
+from typing import Optional, Sequence
+import math
+
 from schemdraw.segments import Segment, SegmentArc
+from schemdraw.elements import Element
+from schemdraw.elements.twoterm import cycloid
+from schemdraw.types import XformTap
 
 
 class TransformerCustom(Element):
-    """
-    Simple transformer: two inductive coils facing each other.
-    start/end are primary left/right for simple inline use.
-    For richer wiring, anchors: p1, p2, s1, s2 (top/bottom).
-    """
 
-    def __init__(self, width=2.8, loops=3, radius=0.16, gap=0.35, lw=1.5):
-        super().__init__()
-        # We'll provide 4 terminals: primary top/bottom at left, secondary top/bottom at right
-        # Coordinates
-        left_x = 0.0
-        right_x = width
-        coil_w = 0.8
-        mid = width / 2
+    # _element_defaults = {
+    #     "core": True,
+    #     "loop": False,
+    #     "corewidth": 0.75,
+    #     "phasegap": 0.4,
+    #     "arcwidth": 0.4,  # For non-loop inductors
+    # }
 
-        # terminal y positions
-        yt = 0.45
-        yb = -0.45
+    def __init__(
+        self,
+        t1: int | Sequence[int] = 4,
+        t2: int | Sequence[int] = 4,
+        *,
+        core: bool = True,
+        loop: bool = False,
+        align: str = "center",
+        phase_gap: float = 0.4,
+        arcwidth: float = 0.4,
+        corewidth: float = 0.75,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
 
-        # primary terminals to coil
-        p_coil_x = mid - gap / 2 - coil_w
-        self.segments.append(Segment([(left_x, yt), (p_coil_x, yt)], lw=lw))
-        self.segments.append(Segment([(left_x, yb), (p_coil_x, yb)], lw=lw))
+        if isinstance(t1, int):
+            t1 = [t1]
+        if isinstance(t2, int):
+            t2 = [t2]
 
-        # secondary terminals to coil
-        s_coil_x = mid + gap / 2 + coil_w
-        self.segments.append(Segment([(s_coil_x, yt), (right_x, yt)], lw=lw))
-        self.segments.append(Segment([(s_coil_x, yb), (right_x, yb)], lw=lw))
+        self._t1, self._t2 = t1, t2
 
-        # coils: draw arcs between yb..yt, centered around their coil area
-        # primary coil arcs (facing right)
-        pitch = (yt - yb) / (loops + 1)
-        for i in range(loops):
-            cy = yb + (i + 1) * pitch
-            self.segments.append(
-                SegmentArc(
-                    center=(p_coil_x + coil_w * 0.6, cy),
-                    width=2 * radius,
-                    height=2 * radius,
-                    theta1=90,
-                    theta2=-90,
-                    lw=lw,
-                )
+        # phase_gap = self.params["phasegap"]
+        # corewidth = self.params["corewidth"]
+        if self.params["loop"]:
+            corewidth = corewidth + 0.4
+        if self.params["core"]:
+            corewidth = corewidth + 0.25
+        self._corewidth = corewidth
+
+        def right_position():
+            if align == "center":
+                right_bot = left_height / 2 - right_height / 2
+                right_top = right_bot + right_height
+            elif align == "bottom":
+                right_bot = 0
+                right_top = right_height
+            else:
+                right_top = left_height
+                right_bot = right_top - right_height
+            return right_bot, right_top
+
+        if self.params["loop"]:
+            left_cycloids = [cycloid(n, norm=False, vertical=True) for n in t1]
+            right_cycloids = [
+                cycloid(n, ofst=(corewidth, 0), norm=False, vertical=True, flip=True)
+                for n in t2
+            ]
+            left_height = sum(c[-1][1] for c in left_cycloids) + phase_gap * (
+                len(left_cycloids) - 1
+            )
+            right_height = sum(c[-1][1] for c in right_cycloids) + phase_gap * (
+                len(right_cycloids) - 1
             )
 
-        # secondary coil arcs (facing left)
-        for i in range(loops):
-            cy = yb + (i + 1) * pitch
+            left_bot = 0
+            left_top = left_height
+            right_bot, right_top = right_position()
+
+            a, b = 0.06, 0.19
+            yint = math.acos(a / b)
+            period = math.pi * 2 * a
+            ofst = period - (a * yint - b * math.sin(yint))
+            resheight = 0.25
+            tapxofst = (a - b) / 2 / resheight
+
+            y = left_bot
+            tapnum = 0
+            for i, cyc in enumerate(left_cycloids):
+                height = cyc[-1][1]
+                cyc_y = [(c[0], c[1] + y) for c in cyc]  # Shift to vertical position
+                self.segments.append(Segment(cyc_y))
+                self.anchors[f"p{i*2+1}"] = cyc_y[0]
+                self.anchors[f"p{i*2+2}"] = cyc_y[-1]
+                left_top = cyc_y[-1][1]
+
+                for k in range(0, t1[i]):
+                    self.anchors[f"tapP{tapnum+k+1}"] = (
+                        tapxofst,
+                        cyc_y[0][1] + k * period + ofst,
+                    )
+
+                tapnum += k + 1
+                y += height + phase_gap
+
+            y = right_bot
+            tapnum = 0
+            for i, cyc in enumerate(right_cycloids):
+                height = cyc[-1][1]
+                cyc_y = [(c[0], c[1] + y) for c in cyc]  # Shift to vertical position
+                self.segments.append(Segment(cyc_y))
+                self.anchors[f"s{i*2+1}"] = cyc_y[0]
+                self.anchors[f"s{i*2+2}"] = cyc_y[-1]
+                right_top = cyc_y[-1][1]
+                for k in range(0, t2[i]):
+                    self.anchors[f"tapS{tapnum+k+1}"] = (
+                        corewidth - tapxofst,
+                        cyc_y[0][1] + k * period + ofst,
+                    )
+                tapnum += k + 1
+
+                y += height + phase_gap
+
+        else:  # Not loop
+            arcw = self.params["arcwidth"]
+
+            left_height = sum(t1) * arcw + phase_gap * (len(t1) - 1)
+            right_height = sum(t2) * arcw + phase_gap * (len(t2) - 1)
+            left_bot = 0
+            left_top = left_height
+            right_bot, right_top = right_position()
+
+            y = left_bot
+            tapnum = 0
+            for i, turns in enumerate(t1):
+                self.anchors[f"p{i*2+2}"] = (0, y)
+                self.anchors[f"p{i*2+1}"] = (0, y + turns * arcw)
+                for k in range(turns):
+                    self.segments.append(
+                        SegmentArc(
+                            (0, y + arcw / 2),
+                            theta1=270,
+                            theta2=90,
+                            width=arcw,
+                            height=arcw,
+                        )
+                    )
+                    if k < turns - 1:
+                        self.anchors[f"tapP{tapnum+k+1}"] = (0, y + arcw)
+                    y += arcw
+                tapnum += turns - 1
+                y += phase_gap
+
+            y = right_bot
+            tapnum = 0
+            for i, turns in enumerate(t2):
+                self.anchors[f"s{i*2+2}"] = (corewidth, y)
+                self.anchors[f"s{i*2+1}"] = (corewidth, y + turns * arcw)
+                for k in range(turns):
+                    self.segments.append(
+                        SegmentArc(
+                            (corewidth, y + arcw / 2),
+                            theta1=90,
+                            theta2=270,
+                            width=arcw,
+                            height=arcw,
+                        )
+                    )
+                    if k < turns - 1:
+                        self.anchors[f"tapS{tapnum+k+1}"] = (corewidth, y + arcw)
+                    y += arcw
+                tapnum += turns - 1
+                y += phase_gap
+
+        if self.params["core"]:
+            top = max(left_top, right_top)
+            bot = min(left_bot, right_bot)
+            center = corewidth / 2
+            core_w = corewidth / 10
             self.segments.append(
-                SegmentArc(
-                    center=(s_coil_x - coil_w * 0.6, cy),
-                    width=2 * radius,
-                    height=2 * radius,
-                    theta1=270,
-                    theta2=90,
-                    lw=lw,
-                )
+                Segment([(center - core_w, top), (center - core_w, bot)])
+            )
+            self.segments.append(
+                Segment([(center + core_w, top), (center + core_w, bot)])
             )
 
-        # optional core lines in the middle
-        self.segments.append(
-            Segment([(mid - 0.08, yb - 0.1), (mid - 0.08, yt + 0.1)], lw=lw)
-        )
-        self.segments.append(
-            Segment([(mid + 0.08, yb - 0.1), (mid + 0.08, yt + 0.1)], lw=lw)
-        )
-
-        self.anchors["p1"] = (left_x, yt)
-        self.anchors["p2"] = (left_x, yb)
-        self.anchors["s1"] = (right_x, yt)
-        self.anchors["s2"] = (right_x, yb)
-
-        # compatibility inline anchors (not perfect transformer semantics, but convenient)
-        self.anchors["start"] = self.anchors["p1"]
-        self.anchors["end"] = self.anchors["s1"]
+        self._left_top = left_top
+        self._right_top = right_top
