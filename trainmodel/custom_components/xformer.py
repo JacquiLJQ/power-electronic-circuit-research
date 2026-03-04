@@ -27,7 +27,7 @@ class TransformerCustom(Element):
         nolooparclw: float = 1,  # 画非loop的圆弧的线条宽度
         loop_a: float = 0.06,  # 用cycloid画loop的a值
         loop_b: float = 0.2,  # 0.19,  # 用cycloid画loop的b值. b>a -> 胖线圈，b≈a -> 普通线圈
-        **kwargs,  # 可以设置整体线条宽度
+        **kwargs,
     ):
         super().__init__(**kwargs)
 

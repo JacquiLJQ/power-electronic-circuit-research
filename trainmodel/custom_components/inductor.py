@@ -1,3 +1,5 @@
+import math
+
 from schemdraw.elements import Element
 from schemdraw.segments import Segment, SegmentArc
 from schemdraw.elements.twoterm import cycloid
@@ -9,38 +11,32 @@ class InductorCustom(Element):
     but scaled to custom length and with leads.
     """
 
-    # _element_defaults = {
-    #     "core_ls": None,
-    #     "core_lw": None,
-    #     "core_color": None,
-    # }
-
     def __init__(
         self,
         loops=4,  # 多少个线圈
         lw=1.5,  # inductor line width
         corelw=1,  # core line width
-        # lead=0.55,
         a=0.06,  # cycloid a
         b=0.19,  # cycloid b
         type: int = 2,
         core: int = 1,  # number of core
         coregap: float = 0.12,
         coreofst: float = 0.5,
-        ind_w=0.75,  # 单个长度
+        ind_w=0.75,  # 单个圈圈width
         **kwargs
     ):
         super().__init__(**kwargs)
-        # ind_w = 0.25
-        # coregap = 0.12
-        # coreofst = 0.5
         length = loops * ind_w
         if type == 1:
 
-            self.segments.append(Segment(cycloid(loops=loops, a=a, b=b), lw=lw))
+            cycloid_seg = Segment(cycloid(loops=loops, a=a, b=b), lw=lw)
+            self.segments.append(cycloid_seg)
+            length = abs(cycloid_seg.get_bbox().xmax - cycloid_seg.get_bbox().xmin)
+            height = abs(cycloid_seg.get_bbox().ymax - cycloid_seg.get_bbox().ymin)
             if core > 0:
                 for i in range(core):
-                    y = coreofst + coregap * i
+                    coreoffset = max(coreofst, height)
+                    y = coreoffset + coregap * i
                     self.segments.append(
                         Segment(
                             [(0, y), (length, y)],

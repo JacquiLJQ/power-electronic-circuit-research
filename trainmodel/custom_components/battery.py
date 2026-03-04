@@ -22,8 +22,6 @@ class BatteryCustom(Element):
         batw=0.1,
         bat1=0.3,
         bat2=0.2,
-        # y1offset=0.5,  # 模拟手写倾斜效果
-        # y2offset=0.5,
         lw=1,
     ):
         super().__init__()

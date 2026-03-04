@@ -62,11 +62,6 @@ from schemdraw.segments import Segment
 
 
 class ResistorCustom(Element):
-    """
-    Keep the original zigzag style (0.5, 1.5, 2.5 ...)*reswidth,
-    but repeat according to `zigs`.
-    No leads.
-    """
 
     def __init__(
         self,

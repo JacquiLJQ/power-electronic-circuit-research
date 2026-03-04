@@ -1,4 +1,5 @@
 import math
+import random
 
 from schemdraw.elements import Element
 from schemdraw.segments import Segment, SegmentArc, SegmentCircle
@@ -16,7 +17,7 @@ class SwitchIdealCustom(Element):
     _element_defaults = {
         "arrowwidth": 0.15,
         "arrowlength": 0.25,
-        "arrow_lw": None,
+        "arrow_lw": 0.5,
         "arrow_color": None,
     }
 
@@ -37,6 +38,14 @@ class SwitchIdealCustom(Element):
         blade_height: float = 0.2,  # 刀片抬起高度，决定开关张开程度
         **kwargs,
     ):
+        def make_rng(seed: int | None = None) -> random.Random:
+            return random.Random(seed)
+
+        def random_arrow(rng: random.Random):
+            self.params["arrowwidth"] = rng.uniform(0.05, 0.2)
+            self.params["arrowlength"] = rng.uniform(0.15, 0.3)
+            self.params["arrow_lw"] = rng.uniform(0.5, 1.5)
+
         super().__init__(**kwargs)
         xr = length
         blade_x = xr * blade_x_ratio
@@ -112,6 +121,7 @@ class SwitchIdealCustom(Element):
             self.segments.append(Segment([(xr, 0), (xr + lead, 0)], lw=leadlw))
 
         if action == "open":
+            random_arrow(make_rng())
             self.segments.append(
                 SegmentArc(
                     (xr * 0.4, blade_y * 0.25),
@@ -127,6 +137,7 @@ class SwitchIdealCustom(Element):
                 )
             )
         if action == "close":
+            random_arrow(make_rng())  # add seed if needed
             self.segments.append(
                 SegmentArc(
                     (xr * 0.4, blade_y * 0.25),

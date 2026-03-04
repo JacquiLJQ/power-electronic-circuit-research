@@ -13,17 +13,17 @@ class VoltageSourceCustom(Element):
 
     def __init__(
         self,
-        r=0.5,
-        theta=90,
-        circlelw=1,
-        plus_len=0.2,
-        pluslw=1,
-        minuslw=1,
-        minusx=0.1,
-        plusx=0.5,
+        r=0.5,  # 圆圈半径
+        theta=90,  # 角度
+        circlelw=1,  # 圆圈线宽
+        plus_len=0.2,  # 加号长
+        pluslw=1,  # 加号线宽
+        minuslw=1,  # 减号线宽
+        minusx=0.1,  # 减号起始x
+        plusx=0.5,  # 加号起始x
         **kwargs
-    ):  # 外圈圆形线宽
-        super().__init__()
+    ):
+        super().__init__(**kwargs)
         self.segments.append(Segment([(0, 0), (0, 0), gap, (1, 0), (1, 0)]))
 
         self.segments.append(SegmentCircle((0.5, 0), r, lw=circlelw))

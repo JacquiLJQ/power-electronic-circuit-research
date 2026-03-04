@@ -23,22 +23,23 @@ class DiodeCustom(Element):
         length=2,  # 三角形要拉长多少
     ):
         super().__init__()
-        self.segments.append(
-            Segment(
-                [
-                    (0, 0),
-                    gap,
-                    (lineheight * length, height),
-                    (lineheight * length, -height),
-                    gap,
-                    (lineheight * length, 0),
-                ],
-                lw=lw,
-            )
+        line_seg = Segment(
+            [
+                (0, 0),
+                gap,
+                (lineheight * length, height),
+                (lineheight * length, -height),
+                gap,
+                (lineheight * length, 0),
+            ],
+            lw=lw,
         )
+        self.segments.append(line_seg)
+        line_height = abs(line_seg.get_bbox().ymax - line_seg.get_bbox().ymin) / 2
+
         self.segments.append(
             SegmentPoly(
-                [(0, polyheight), (lineheight * length, 0), (0, -polyheight)],
+                [(0, line_height), (lineheight * length, 0), (0, -line_height)],
                 fill=fill,
                 color="black",
                 lw=polylw,

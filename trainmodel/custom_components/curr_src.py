@@ -11,23 +11,16 @@ class CurrentSourceCustom(Element):
     Current source: circle with arrow.
     """
 
-    # _element_defaults = {
-    #     "arrowwidth": 0.15,
-    #     "arrowlength": 0.25,
-    #     "arrow_lw": None,
-    #     "arrow_color": None,
-    # }
-
     def __init__(
         self,
         arrowwidth=0.3,  # 三角形尖尖的宽
         arrowlength=0.25,  # 三角形尖尖的长
-        arrowlw=1,
-        r=0.5,
+        arrowlw=1,  # 箭头尾巴线宽
+        r=0.5,  # 圆圈半径
         theta=90,
-        arrowstart=0.2,  # 线段(尾巴)起始
-        arrowtaillength=0.6,  # 线段(尾巴)长
-        circlelw=1,  # 外圈圆形线宽
+        arrowstart=0.2,  # 箭头线段(尾巴)起始
+        arrowtaillength=0.6,  # 箭头线段(尾巴)长
+        circlelw=1,  # 圆圈线宽
         **kwargs
     ):
         super().__init__(**kwargs)

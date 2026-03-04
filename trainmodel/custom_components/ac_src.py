@@ -12,7 +12,7 @@ class ACSourceCustom(Element):
     AC source: circle with sine-like bezier inside.
     """
 
-    _element_defaults = {"sin_lw": None, "sin_color": None}
+    # _element_defaults = {"sin_lw": None, "sin_color": None}
 
     def __init__(self, r=0.8, theta=180, circlelw=2, sin_lw=1.5):
         super().__init__()

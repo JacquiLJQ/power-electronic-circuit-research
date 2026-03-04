@@ -13,8 +13,6 @@ class CapacitorCustom(Element):
     Two-plate capacitor.
     """
 
-    _element_defaults = {"polar": False}
-
     def __init__(
         self,
         *,
@@ -23,7 +21,6 @@ class CapacitorCustom(Element):
         height=0.25,  # cap高度
         capgap=0.2,  # cap中间的间隙
         caplw=2,  # cap的画线宽度
-        # textlw=1,  # 正负极符号的画线宽度
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -61,5 +58,5 @@ class CapacitorCustom(Element):
                     lw=caplw,
                 )
             )
-        if self.params["polar"]:
+        if polar == True:
             self.segments.append(SegmentText((-capgap * 1.2, capgap), "+"))
