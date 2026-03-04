@@ -3,7 +3,7 @@ import math
 from schemdraw.elements import Element
 from schemdraw.segments import Segment, SegmentArc, SegmentCircle
 
-sw_dot_r = 0.12
+# sw_dot_r = 0.12
 
 gap = (math.nan, math.nan)
 
@@ -13,25 +13,6 @@ class SwitchIdealCustom(Element):
     Ideal switch: two contacts with a tilted blade (open switch).
     """
 
-    # def __init__(self, length=2.2, gap=0.35, blade=0.45, lw=1.5):
-    #     super().__init__()
-    #     lead = (length - gap) / 2
-    #     xL = lead
-    #     xR = lead + gap
-
-    #     # leads
-    #     self.segments.append(Segment([(0, 0), (xL, 0)], lw=lw))
-    #     self.segments.append(Segment([(xR, 0), (length, 0)], lw=lw))
-
-    #     # contacts (small vertical ticks)
-    #     self.segments.append(Segment([(xL, -0.12), (xL, 0.12)], lw=lw))
-    #     self.segments.append(Segment([(xR, -0.12), (xR, 0.12)], lw=lw))
-
-    #     # blade from left contact upwards toward right
-    #     self.segments.append(Segment([(xL, 0.0), (xL + blade, 0.25)], lw=lw))
-
-    #     self.anchors["start"] = (0, 0)
-    #     self.anchors["end"] = (length, 0)
     _element_defaults = {
         "arrowwidth": 0.15,
         "arrowlength": 0.25,
@@ -42,12 +23,24 @@ class SwitchIdealCustom(Element):
     def __init__(
         self,
         action: str = "",
-        contacts: bool = True,
+        contacts: bool = False,
         nc: bool = False,
-        type: int = 1,
-        **kwargs
+        lead: float = 0.3,  # 引线长
+        leadlw: float = 0.5,  # 引线线条宽
+        switchlw: float = 1,  # 开关线条宽
+        sw_dot_r: float = 0.12,  # 开关触点小圆的半径
+        sw_dot_fill: bool = False,  # 是否开启开关触点小圆的fill
+        sw_dot_fill_clr: str = "black",  # 开关触点小圆的颜色
+        sw_dot_lw: float = 1,  # 触点小圆线条宽
+        length: float = 0.9,  # 开关从左触点到右触点的距离
+        blade_x_ratio: float = 1,  # 刀片顶点的相对 x 位置（原来 0.8 或 0.9
+        blade_height: float = 0.2,  # 刀片抬起高度，决定开关张开程度
+        **kwargs,
     ):
         super().__init__(**kwargs)
+        xr = length
+        blade_x = xr * blade_x_ratio
+        blade_y = blade_height
         if contacts:
             if nc:
                 self.segments.append(
@@ -56,37 +49,72 @@ class SwitchIdealCustom(Element):
                             (0, 0),
                             gap,
                             (sw_dot_r * 2, 0),
-                            (0.9, sw_dot_r + 0.05),
+                            (blade_x, sw_dot_r + 0.05),
                             gap,
-                            (1, 0),
-                        ]
+                            (xr, 0),
+                        ],
+                        lw=switchlw,
                     )
                 )
             else:
                 self.segments.append(
                     Segment(
-                        [(0, 0), gap, (sw_dot_r * 2, 0.1), (0.8, 0.45), gap, (1, 0)]
+                        [
+                            (0, 0),
+                            gap,
+                            (sw_dot_r * 2, 0.1),
+                            (blade_x, blade_y),
+                            gap,
+                            (xr, 0),
+                        ],
+                        lw=switchlw,
                     )
                 )
             self.segments.append(
-                SegmentCircle((sw_dot_r, 0), sw_dot_r, fill="bg", zorder=3)
+                SegmentCircle(
+                    (sw_dot_r, 0),
+                    sw_dot_r,
+                    fill=sw_dot_fill,
+                    color=sw_dot_fill_clr,
+                    zorder=3,
+                    lw=sw_dot_lw,
+                )
             )
             self.segments.append(
-                SegmentCircle((1 - sw_dot_r, 0), sw_dot_r, fill="bg", zorder=3)
+                SegmentCircle(
+                    (xr - sw_dot_r, 0),
+                    sw_dot_r,
+                    fill=sw_dot_fill,
+                    color=sw_dot_fill_clr,
+                    zorder=3,
+                    lw=sw_dot_lw,
+                )
             )
 
         else:
 
             if nc:
-                self.segments.append(Segment([(0, 0), (1.15, 0.45), gap, (1, 0)]))
-                self.segments.append(Segment([(1, 0), (1, 0.55)]))
+                self.segments.append(
+                    Segment(
+                        [(0, 0), (xr + 0.15 * xr, blade_y), gap, (xr, 0)], lw=switchlw
+                    )
+                )
+                self.segments.append(
+                    Segment([(1, 0), (xr, blade_y + 0.1)], lw=switchlw)
+                )
             else:
-                self.segments.append(Segment([(0, 0), (0.85, 0.45), gap, (1, 0)]))
+                self.segments.append(
+                    Segment([(0, 0), (blade_x, blade_y), gap, (xr, 0)], lw=switchlw)
+                )
+
+        if lead and lead > 0:
+            self.segments.append(Segment([(-lead, 0), (0, 0)], lw=leadlw))
+            self.segments.append(Segment([(xr, 0), (xr + lead, 0)], lw=leadlw))
 
         if action == "open":
             self.segments.append(
                 SegmentArc(
-                    (0.4, 0.1),
+                    (xr * 0.4, blade_y * 0.25),
                     width=0.5,
                     height=0.75,
                     theta1=-10,
@@ -101,7 +129,7 @@ class SwitchIdealCustom(Element):
         if action == "close":
             self.segments.append(
                 SegmentArc(
-                    (0.4, 0.25),
+                    (xr * 0.4, blade_y * 0.25),
                     width=0.5,
                     height=0.75,
                     theta1=-10,

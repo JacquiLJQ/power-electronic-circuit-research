@@ -36,11 +36,11 @@ def make_component(cls: str):
     if cls == "resistor":
         return ResistorCustom()
     if cls == "swi_ideal":
-        return SwitchIdealCustom()
+        return SwitchIdealCustom()  # customized
     if cls == "swi_real":
-        return NMosCustom()
+        return NMosCustom()  # 暂时用系统自带的
     if cls == "xformer":
-        return TransformerCustom()
+        return TransformerCustom()  # customized
     raise ValueError(f"Unknown component class: {cls}")
 
 
