@@ -20,9 +20,9 @@ from schemdraw.segments import Segment, SegmentArc, SegmentBezier, SegmentCircle
 
 def make_component(cls: str):
     if cls == "ac_src":
-        return ACSourceCustom()
+        return ACSourceCustom()  # customized
     if cls == "volt_src":
-        return VoltageSourceCustom()
+        return VoltageSourceCustom()  # customized
     if cls == "curr_src":
         return CurrentSourceCustom()  # customized
     if cls == "battery":
