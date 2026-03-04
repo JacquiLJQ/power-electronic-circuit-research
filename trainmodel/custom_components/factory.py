@@ -87,16 +87,16 @@ if __name__ == "__main__":
         elem.label(name, loc="bottom")
 
         # --- 1) 元件自身 bbox（未应用 transform） ---
-        bb_local = elem.get_bbox(transform=False, includetext=False)
-        print(name, "local bbox (no transform, no text):", bb_local)
+        # bb_local = elem.get_bbox(transform=False, includetext=False)
+        # print(name, "local bbox (no transform, no text):", bb_local)
 
-        # --- 2) 放到 drawing 里的 bbox（应用 transform） ---
-        bb_world = elem.get_bbox(transform=True, includetext=False)
-        print(name, "world bbox (transform, no text):", bb_world)
+        # # --- 2) 放到 drawing 里的 bbox（应用 transform） ---
+        # bb_world = elem.get_bbox(transform=True, includetext=False)
+        # print(name, "world bbox (transform, no text):", bb_world)
 
-        # 画 world bbox 框出来（你也可以画 local bbox，但要手动加偏移/变换，麻烦）
-        xmin, ymin, xmax, ymax = bb_world
-        d += BBoxRect(xmin, ymin, xmax, ymax, lw=0.8)
+        # # 画 world bbox 框出来（你也可以画 local bbox，但要手动加偏移/变换，麻烦）
+        # xmin, ymin, xmax, ymax = bb_world
+        # d += BBoxRect(xmin, ymin, xmax, ymax, lw=0.8)
 
     d.draw(show=True)
     # d.save("bbox_debug.svg")
