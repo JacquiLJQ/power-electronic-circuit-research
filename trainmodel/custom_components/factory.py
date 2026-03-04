@@ -30,7 +30,7 @@ def make_component(cls: str):
     if cls == "cap":
         return CapacitorCustom()  # customized
     if cls == "diode":
-        return DiodeCustom()
+        return DiodeCustom()  # customized
     if cls == "inductor":
         return InductorCustom()
     if cls == "resistor":

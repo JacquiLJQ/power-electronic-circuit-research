@@ -3,8 +3,8 @@ import math
 from schemdraw.elements import Element
 from schemdraw.segments import Segment, SegmentPoly
 
-resheight = 0.25  # Resistor height
-reswidth = 1.0 / 6
+height = 0.25  # Resistor height
+
 gap = (math.nan, math.nan)
 
 
@@ -13,40 +13,34 @@ class DiodeCustom(Element):
     Simple diode: triangle -> bar.
     """
 
-    def __init__(self, length=2.0, height=0.6, lw=1.5):
+    def __init__(
+        self,
+        polyheight=0.2,  # 三角形高
+        lineheight=0.2,  # 直线高
+        lw=1,
+        polylw=1,
+        fill=False,
+        length=2,  # 三角形要拉长多少
+    ):
         super().__init__()
-        # lead = 0.5
-        # body_len = max(0.3, length - 2 * lead)
-
-        # xL = lead
-        # xR = lead + body_len
-        # y = height / 2
-
-        # # leads
-        # self.segments.append(Segment([(0, 0), (xL, 0)], lw=lw))
-        # self.segments.append(Segment([(xR, 0), (length, 0)], lw=lw))
-
-        # # triangle pointing right
-        # tri = [(xL, -y), (xL, y), (xR - 0.15, 0)]
-        # self.segments.append(SegmentPoly(tri, closed=True, lw=lw))
-
-        # # cathode bar
-        # self.segments.append(Segment([(xR - 0.15, -y), (xR - 0.15, y)], lw=lw))
-
-        # self.anchors["start"] = (0, 0)
-        # self.anchors["end"] = (length, 0)
         self.segments.append(
             Segment(
                 [
                     (0, 0),
                     gap,
-                    (resheight * 1.4, resheight),
-                    (resheight * 1.4, -resheight),
+                    (lineheight * length, height),
+                    (lineheight * length, -height),
                     gap,
-                    (resheight * 1.4, 0),
-                ]
+                    (lineheight * length, 0),
+                ],
+                lw=lw,
             )
         )
         self.segments.append(
-            SegmentPoly([(0, resheight), (resheight * 1.4, 0), (0, -resheight)])
+            SegmentPoly(
+                [(0, polyheight), (lineheight * length, 0), (0, -polyheight)],
+                fill=fill,
+                color="black",
+                lw=polylw,
+            )
         )
