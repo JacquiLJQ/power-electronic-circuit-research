@@ -34,7 +34,7 @@ def make_component(cls: str):
     if cls == "inductor":
         return InductorCustom()
     if cls == "resistor":
-        return ResistorCustom()
+        return ResistorCustom()  # customized
     if cls == "swi_ideal":
         return SwitchIdealCustom()  # customized
     if cls == "swi_real":
