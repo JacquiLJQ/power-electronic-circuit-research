@@ -32,7 +32,7 @@ def make_component(cls: str):
     if cls == "diode":
         return DiodeCustom()  # customized
     if cls == "inductor":
-        return InductorCustom()
+        return InductorCustom()  # customized
     if cls == "resistor":
         return ResistorCustom()  # customized
     if cls == "swi_ideal":
