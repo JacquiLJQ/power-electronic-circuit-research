@@ -28,7 +28,7 @@ def make_component(cls: str):
     if cls == "battery":
         return BatteryCustom()
     if cls == "cap":
-        return CapacitorCustom()
+        return CapacitorCustom()  # customized
     if cls == "diode":
         return DiodeCustom()
     if cls == "inductor":
