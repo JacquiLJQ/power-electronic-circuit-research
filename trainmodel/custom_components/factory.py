@@ -1,4 +1,5 @@
 from schemdraw.elements import Element
+import schemdraw.elements as elm
 
 import schemdraw
 
@@ -43,8 +44,7 @@ def _sum_turns(t: int | Sequence[int]) -> int:
 
 def sample_transformer_params(rng: random.Random) -> dict:
     loop = rng.random() < 0.5
-    core = rng.random() >= 0.5
-
+    core = rng.random() < 0.95
     t1 = _sample_turns(rng)
     t2 = _sample_turns(rng)
 
@@ -58,6 +58,7 @@ def sample_transformer_params(rng: random.Random) -> dict:
 
     if loop:
         # cycloid 参数：确保 b > a
+
         loop_a = rng.uniform(0.025, 0.1)
         loop_b = rng.uniform(0.09, 0.26)
 
@@ -67,7 +68,7 @@ def sample_transformer_params(rng: random.Random) -> dict:
         corewidth = rng.uniform(0.60, 0.95) + fat * 1.2
         corewidth = max(corewidth, 0.65)
 
-        looparclw = rng.uniform(0.5, 2)
+        looparclw = rng.uniform(0.5, 3)
         noloooparclw = rng.uniform(0.5, 2)  # 这个在 loop=False 才用，先给个值
 
         corelw = rng.uniform(0.5, 2)  # core 不要比绕组粗太多
@@ -89,6 +90,7 @@ def sample_transformer_params(rng: random.Random) -> dict:
             noloooparclw=noloooparclw,
             loop_a=loop_a,
             loop_b=loop_b,
+            scale=0.6,
         )
 
     # non-loop 模式
@@ -502,7 +504,8 @@ def sample_ac_src_params(rng: random.Random) -> dict:
     )
 
 
-def make_component(cls: str, rng: random.Random):
+def make_component(cls: str):
+    rng = make_rng()
     if cls == "ac_src":
         return ACSourceCustom(**sample_ac_src_params(rng))  # customized
     if cls == "volt_src":
@@ -522,7 +525,40 @@ def make_component(cls: str, rng: random.Random):
     if cls == "swi_ideal":
         return SwitchIdealCustom(**sample_switchideal_params(rng))
     if cls == "swi_real":
-        return NMosCustom()  # 暂时用系统自带的
+        circle = rng.random() < 0.5
+
+        candidates = [
+            elm.Bjt,
+            elm.Bjt2,
+            elm.BjtNpn,
+            elm.BjtNpn2,
+            elm.BjtPnp,
+            elm.BjtPnp2,
+            elm.BjtPnp2c,
+            elm.BjtPnp2c2,
+            elm.JFet,
+            elm.JFet2,
+            elm.JFetN,
+            elm.JFetN2,
+            elm.JFetP,
+            elm.JFetP2,
+            elm.NFet,
+            elm.NFet2,
+            elm.NMos,
+            elm.NMos2,
+            elm.PFet,
+            elm.PFet2,
+            elm.PMos,
+            elm.PMos2,
+            elm.AnalogNFet,
+            elm.AnalogPFet,
+            elm.AnalogBiasedFet,
+        ]
+
+        lw = rng.uniform(0.25, 3)
+        chosen_cls = rng.choice(candidates)
+        return chosen_cls(circle=circle, lw=lw)
+
     if cls == "xformer":
         return TransformerCustom(**sample_transformer_params(rng))
     raise ValueError(f"Unknown component class: {cls}")
@@ -567,7 +603,7 @@ if __name__ == "__main__":
         r, c = divmod(i, cols)
         x, y = c * dx, -r * dy
 
-        elem = make_component(name, rng)
+        elem = make_component(name)
         d += elem.at((x, y))
         elem.label(name, loc="bottom")
 

@@ -5,7 +5,7 @@ import math
 
 # ========= 配置 =========
 CSV_PATH = "per_image_rank.csv"
-IMAGE_DIR = r"testset11cls/images/valid"  # 原图片目录
+IMAGE_DIR = r"datasets/testset11cls/images/valid"  # 原图片目录
 OUTPUT_DIR = "ranked_images"  # 输出总目录
 IMAGE_COLUMN = "image"  # CSV里图片列名
 # ========================

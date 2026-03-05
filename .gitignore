@@ -19,3 +19,5 @@ component_dataset/
 yolo_dataset_mix/
 ranked_images/
 datasets/
+synthetic_schemdraw_dataset_no_wire/
+synthetic_schemdraw_dataset/

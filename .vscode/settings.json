@@ -1,0 +1,5 @@
+{
+    "python.analysis.extraPaths": [
+        "./trainmodel/custom_components"
+    ]
+}

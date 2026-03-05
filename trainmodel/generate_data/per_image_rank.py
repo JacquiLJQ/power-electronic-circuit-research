@@ -9,9 +9,9 @@ from ultralytics import YOLO
 # ---------------------------
 # 配置区：按你的路径改这几个
 # ---------------------------
-WEIGHTS = r"models/best_mixed_train-2500+2500.pt"
-VAL_IMAGES_DIR = r"testset11cls/images/valid"
-VAL_LABELS_DIR = r"testset11cls/labels/valid"
+WEIGHTS = r"best.pt"
+VAL_IMAGES_DIR = r"datasets/testset11cls/images/valid"
+VAL_LABELS_DIR = r"datasets/testset11cls/labels/valid"
 OUT_CSV = "per_image_rank.csv"
 
 CONF_THRES = 0.25  # 预测置信度阈值

@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import schemdraw
 import schemdraw.elements as elm
 from PIL import Image
+from factory import make_component
 
 
 # -----------------------------
@@ -64,7 +65,7 @@ WIRES_RANGE = (5, 10)
 MARGIN = 0.4
 
 # Random orientations
-ORIENTS = [0, 90, 180, 270]  # degrees
+ORIENTS = [0, 45, 90, 135, 180, 225, 270]  # degrees
 
 
 # -----------------------------
@@ -160,31 +161,19 @@ def make_element(cls: str, angle: int):
     """
     Return a schemdraw element instance. We'll place it with .at((x,y)) and .theta(angle).
     """
-    if cls == "ac_src":
-        # AC source symbol
-        return elm.SourceSin()
-    if cls == "volt_src":
-        return elm.SourceV()
-    if cls == "curr_src":
-        return elm.SourceI()
-    if cls == "battery":
-        return elm.Battery()
-    if cls == "cap":
-        return elm.Capacitor()
-    if cls == "diode":
-        return elm.Diode()
-    if cls == "inductor":
-        return elm.Inductor()
-    if cls == "resistor":
-        return elm.Resistor()
-    if cls == "swi_ideal":
-        return elm.Switch()
-    if cls == "swi_real":
-        # "real" switch: use MOSFET symbol as a proxy (common in power electronics)
-        return elm.NMos()  # 这里可以用原版的swi（transistors）因为已经有很多变体了
-    if cls == "xformer":
-        return elm.Transformer()  # 这里可以用一些原版的，再用一些定制的
-    raise ValueError(f"Unknown class: {cls}")
+
+    for _ in range(10):
+        try:
+            elem = make_component(cls)
+            return elem
+        except Exception as e:
+            last_err = e
+            # 可以在这里打印调试信息（可选）
+            print(f"[WARN] retry make_component({cls}) due to: {e}")
+            continue
+
+    # 如果多次失败，才真正抛出错误
+    raise RuntimeError(f"Failed to create element {cls} after 10 retries") from last_err
 
 
 # -----------------------------
@@ -215,6 +204,57 @@ def l_shaped_path(p1, p2) -> List[Tuple[float, float]]:
         return [(x1, y1), (x2, y1), (x2, y2)]
     else:
         return [(x1, y1), (x1, y2), (x2, y2)]
+
+
+def get_world_anchor(elem, name: str):
+    # # 有些版本叫 absanchors
+    if hasattr(elem, "absanchors") and name in elem.absanchors:
+        return elem.absanchors[name]
+    # 有些版本可能有 _absanchors 或 anchors 已经是 world（不常见）
+    if hasattr(elem, "_absanchors") and name in elem._absanchors:
+        return elem._absanchors[name]
+    if hasattr(elem, "anchors") and name in elem.anchors:
+        return elem.anchors[name]
+    return None
+
+
+def rect_center_r(r):
+    return (r.x + r.w / 2, r.y + r.h / 2)
+
+
+def pick_port_on_r_towards(r, target_xy, rng, jitter=0.08):
+    xmin, ymin = r.x, r.y
+    xmax, ymax = r.x + r.w, r.y + r.h
+    tx, ty = target_xy
+    cx, cy = rect_center_r(r)
+
+    dx, dy = tx - cx, ty - cy
+    if abs(dx) >= abs(dy):
+        x = xmax if dx >= 0 else xmin
+        y = rng.uniform(ymin, ymax)
+        y += rng.uniform(-jitter, jitter) * (ymax - ymin)
+        y = max(ymin, min(y, ymax))
+        return (x, y)
+    else:
+        y = ymax if dy >= 0 else ymin
+        x = rng.uniform(xmin, xmax)
+        x += rng.uniform(-jitter, jitter) * (xmax - xmin)
+        x = max(xmin, min(x, xmax))
+        return (x, y)
+
+
+def draw_wire(d, path, lw):
+    for i in range(len(path) - 1):
+        d += elm.Line(lw=lw).at(path[i]).to(path[i + 1])
+
+
+def simple_l_path(p1, p2, rng):
+    x1, y1 = p1
+    x2, y2 = p2
+    if rng.random() < 0.5:
+        return [p1, (x2, y1), p2]
+    else:
+        return [p1, (x1, y2), p2]
 
 
 # -----------------------------
@@ -298,7 +338,16 @@ def generate_one(image_path: str, label_path: str, seed: int = None):
     )
 
     drawn_elements = []
+    rng = random.Random()
     # Draw components at bbox centers
+    # for p in placed:
+    #     r = p.rect
+    #     cx = r.x + r.w / 2
+    #     cy = r.y + r.h / 2
+
+    #     elem = make_element(p.cls, p.angle).at((cx, cy)).theta(p.angle)
+    #     d += elem
+    #     drawn_elements.append((p.cls, elem))
     for p in placed:
         r = p.rect
         cx = r.x + r.w / 2
@@ -306,10 +355,35 @@ def generate_one(image_path: str, label_path: str, seed: int = None):
 
         elem = make_element(p.cls, p.angle).at((cx, cy)).theta(p.angle)
         d += elem
-        drawn_elements.append((p.cls, elem))
+
+        cur = {"cls": p.cls, "elem": elem, "rect": r}
+        # 如果要连线：把“当前元件”和“上一个元件”连起来
+        if drawn_elements and (rng.random() < 0.0):
+            prev = drawn_elements[-1]
+
+            # 1) 尝试用 anchor（更像电路图）
+            #   优先：prev 的 end -> cur 的 start
+            p1 = get_world_anchor(prev["elem"], "end")
+            p2 = get_world_anchor(cur["elem"], "start")
+
+            # 2) anchor 不可用就 bbox fallback（朝向对方的边）
+            if p1 is None or p2 is None:
+                cprev = rect_center_r(prev["rect"])
+                ccur = rect_center_r(cur["rect"])
+                p1 = pick_port_on_r_towards(prev["rect"], ccur, rng)
+                p2 = pick_port_on_r_towards(cur["rect"], cprev, rng)
+
+            path = simple_l_path(p1, p2, rng)
+            lw = rng.uniform(0.5, 2.0)
+            draw_wire(d, path, lw)
+
+        drawn_elements.append(cur)
 
     # Draw wires
     # if needWire:
+
+    # need_wire = rng.random() < 0.5
+    # if need_wire:
     #     wires_n = random.randint(*WIRES_RANGE)
     #     for _ in range(wires_n):
     #         a, b = random.sample(placed, 2)
@@ -319,7 +393,8 @@ def generate_one(image_path: str, label_path: str, seed: int = None):
 
     #         for s in range(len(path) - 1):
     #             (x1, y1), (x2, y2) = path[s], path[s + 1]
-    #             d += elm.Line().at((x1, y1)).to((x2, y2))
+    #             lw = rng.uniform(0.5, 2)
+    #             d += elm.Line(lw=lw).at((x1, y1)).to((x2, y2))
 
     # fig = d.draw(show=False)
     dxmin, dymin, dxmax, dymax = d.get_bbox()
@@ -336,7 +411,10 @@ def generate_one(image_path: str, label_path: str, seed: int = None):
 
     yolo_lines = []
 
-    for cls, elem in drawn_elements:
+    for item in drawn_elements:
+        cls = item["cls"]
+        elem = item["elem"]
+        r = item["rect"]
         xmin, ymin, xmax, ymax = elem.get_bbox(transform=True)
 
         xc = ((xmin + xmax) / 2 - dxmin) / spanx
@@ -418,4 +496,6 @@ def generate_dataset(
 if __name__ == "__main__":
     # Example:
     # generate_dataset("synthetic_schemdraw_dataset", n_images=500, val_ratio=0.2, seed=42)
-    generate_dataset("synthetic_schemdraw_dataset", n_images=2500, val_ratio=0, seed=11)
+    generate_dataset(
+        "synthetic_schemdraw_dataset_no_wire", n_images=5000, val_ratio=0.1, seed=456
+    )
