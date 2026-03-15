@@ -564,6 +564,70 @@ def make_component(cls: str):
     raise ValueError(f"Unknown component class: {cls}")
 
 
+def sample_ac_src_params_specific_style():
+    return
+
+
+def make_component_specific_style(cls: str, style=1):
+    # rng = make_rng()
+    if cls == "ac_src":
+        return ACSourceCustom(specificstyle=True)  # check
+    if cls == "volt_src":
+        return VoltageSourceCustom(style=style)  # check
+    if cls == "curr_src":
+        return CurrentSourceCustom()  # 正确率1.1，暂时不调整
+    if cls == "battery":
+        return BatteryCustom(**sample_battery_params(rng))
+    if cls == "cap":
+        return CapacitorCustom(**sample_capacitor_params(rng))
+    if cls == "diode":
+        return DiodeCustom(**sample_diode_params(rng))
+    if cls == "inductor":
+        return InductorCustom(**sample_inductor_params(rng))
+    if cls == "resistor":
+        return ResistorCustom(**sample_resistor_params(rng))
+    if cls == "swi_ideal":
+        return SwitchIdealCustom(**sample_switchideal_params(rng))
+    if cls == "swi_real":
+        circle = rng.random() < 0.5
+
+        candidates = [
+            elm.Bjt,
+            elm.Bjt2,
+            elm.BjtNpn,
+            elm.BjtNpn2,
+            elm.BjtPnp,
+            elm.BjtPnp2,
+            elm.BjtPnp2c,
+            elm.BjtPnp2c2,
+            elm.JFet,
+            elm.JFet2,
+            elm.JFetN,
+            elm.JFetN2,
+            elm.JFetP,
+            elm.JFetP2,
+            elm.NFet,
+            elm.NFet2,
+            elm.NMos,
+            elm.NMos2,
+            elm.PFet,
+            elm.PFet2,
+            elm.PMos,
+            elm.PMos2,
+            elm.AnalogNFet,
+            elm.AnalogPFet,
+            elm.AnalogBiasedFet,
+        ]
+
+        lw = rng.uniform(0.25, 3)
+        chosen_cls = rng.choice(candidates)
+        return chosen_cls(circle=circle, lw=lw)
+
+    if cls == "xformer":
+        return TransformerCustom(**sample_transformer_params(rng))
+    raise ValueError(f"Unknown component class: {cls}")
+
+
 class BBoxRect(Element):
     def __init__(self, xmin, ymin, xmax, ymax, lw=0.8):
         super().__init__()
@@ -598,26 +662,30 @@ if __name__ == "__main__":
     cols = 4
     d = schemdraw.Drawing()
 
-    for i, name in enumerate(component_list):
-        rng = make_rng()
-        r, c = divmod(i, cols)
-        x, y = c * dx, -r * dy
+    # for i, name in enumerate(component_list):
+    #     rng = make_rng()
+    # r, c = divmod(i, cols)
+    # x, y = c * dx, -r * dy
 
-        elem = make_component(name)
-        d += elem.at((x, y))
-        elem.label(name, loc="bottom")
+    # elem = make_component_specific_style("ac_src")
+    # d += elem.at((0, 0))
+    for i in range(24):
+        elem = make_component_specific_style("volt_src", i)
+        d += elem.at((2 + i, 2 + i))
+    # d += elem.at((0, 0))
+    #     elem.label(name, loc="bottom")
 
-        # --- 1) 元件自身 bbox（未应用 transform） ---
-        bb_local = elem.get_bbox(transform=False, includetext=False)
-        print(name, "local bbox (no transform, no text):", bb_local)
+    #     # --- 1) 元件自身 bbox（未应用 transform） ---
+    #     bb_local = elem.get_bbox(transform=False, includetext=False)
+    #     print(name, "local bbox (no transform, no text):", bb_local)
 
-        # --- 2) 放到 drawing 里的 bbox（应用 transform） ---
-        bb_world = elem.get_bbox(transform=True, includetext=False)
-        print(name, "world bbox (transform, no text):", bb_world)
+    #     # --- 2) 放到 drawing 里的 bbox（应用 transform） ---
+    #     bb_world = elem.get_bbox(transform=True, includetext=False)
+    #     print(name, "world bbox (transform, no text):", bb_world)
 
-        # 画 world bbox 框出来（你也可以画 local bbox，但要手动加偏移/变换，麻烦）
-        xmin, ymin, xmax, ymax = bb_world
-        d += BBoxRect(xmin, ymin, xmax, ymax, lw=0.8)
+    #     # 画 world bbox 框出来（你也可以画 local bbox，但要手动加偏移/变换，麻烦）
+    #     xmin, ymin, xmax, ymax = bb_world
+    #     d += BBoxRect(xmin, ymin, xmax, ymax, lw=0.8)
 
     d.draw(show=True)
     # d.save("bbox_debug.svg")
