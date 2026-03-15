@@ -29,6 +29,18 @@ CLASSES = [
     "volt_src",
     "xformer",
 ]
+CLASSES2 = [  # no swi_real
+    "ac_src",
+    "battery",
+    "cap",
+    "curr_src",
+    "diode",
+    "inductor",
+    "resistor",
+    "swi_ideal",
+    "volt_src",
+    "xformer",
+]
 CLASS2ID = {c: i for i, c in enumerate(CLASSES)}
 
 # Canvas in "drawing units" (schemdraw uses abstract units; export to px via figsize/dpi)
@@ -37,7 +49,7 @@ CANVAS_H = 12.0
 
 # Output image size control
 FIGSIZE_INCH = (16, 6)  # affects resolution with DPI
-DPI = 200
+DPI = 16
 
 # Each class bounding box sizes (in drawing units). You can tune these.
 # Keep them a bit larger than the symbol itself to be safe.
@@ -98,6 +110,11 @@ def rect_intersect(a: Rect, b: Rect) -> bool:
     return not (a.right <= b.x or b.right <= a.x or a.top <= b.y or b.top <= a.y)
 
 
+def bbox_to_rect(bbox):
+    xmin, ymin, xmax, ymax = bbox
+    return Rect(x=xmin, y=ymin, w=xmax - xmin, h=ymax - ymin)
+
+
 def split_free_rect(free: Rect, used: Rect) -> List[Rect]:
     """
     Guillotine-like split: return up to 4 rectangles around 'used' inside 'free'.
@@ -143,8 +160,8 @@ def choose_position_in_free(free: Rect, w: float, h: float) -> Tuple[float, floa
     """
     Randomly choose bottom-left (x,y) inside free rect for a w*h rect.
     """
-    x = random.uniform(free.x, free.right - w)
-    y = random.uniform(free.y, free.top - h)
+    x = random.uniform(0, 200)  # random.uniform(free.x, free.right - w)
+    y = random.uniform(0, 200)  # random.uniform(free.y, free.top - h)
     return x, y
 
 
@@ -257,6 +274,71 @@ def simple_l_path(p1, p2, rng):
         return [p1, (x1, y2), p2]
 
 
+def yolo_no_overlap(yolo_lines):
+    boxes = []
+
+    # 先把 YOLO bbox 转成 xmin,ymin,xmax,ymax
+    for line in yolo_lines:
+        cls_id, xc, yc, w, h = map(float, line.split())
+
+        xmin = xc - w / 2
+        xmax = xc + w / 2
+        ymin = yc - h / 2
+        ymax = yc + h / 2
+
+        boxes.append((xmin, ymin, xmax, ymax))
+
+    # 两两检测
+    n = len(boxes)
+    for i in range(n):
+        xmin1, ymin1, xmax1, ymax1 = boxes[i]
+
+        for j in range(i + 1, n):
+            xmin2, ymin2, xmax2, ymax2 = boxes[j]
+
+            overlap = not (
+                xmax1 < xmin2 or xmax2 < xmin1 or ymax1 < ymin2 or ymax2 < ymin1
+            )
+
+            if overlap:
+                return False
+
+    return True
+
+
+def choose_position(placed_elms: List[elm.Element]):
+    if len(placed_elms) < 1:
+        x = random.uniform(0, 25)
+        y = random.uniform(0, 25)
+        return x, y
+    else:
+
+        candidates = [(x, y) for x in range(26) for y in range(26)]
+        bboxes = []
+        margin = 0
+        for elem in placed_elms:
+            xmin, ymin, xmax, ymax = elem.get_bbox(transform=True)
+            bboxes.append((xmin, ymin, xmax, ymax))
+
+        remaining = []
+        for x, y in candidates:
+            blocked = False
+            for xmin, ymin, xmax, ymax in bboxes:
+                if (xmin - margin) <= x <= (xmax + margin) and (ymin - margin) <= y <= (
+                    ymax + margin
+                ):
+                    blocked = True
+                    break
+            if not blocked:
+                remaining.append((x, y))
+
+        # 5. 从剩余点中随机选一个
+        if remaining:
+            return random.choice(remaining)
+        print("no reasonable x and y found, returning (0,0)")
+        return 0, 0
+
+
 # -----------------------------
 # Main generator per image
 # -----------------------------
@@ -265,69 +347,14 @@ def generate_one(image_path: str, label_path: str, seed: int = None):
         random.seed(seed)
         np.random.seed(seed)
 
-    # Start with one big free rect
-    free_rects = [Rect(MARGIN, MARGIN, CANVAS_W - 2 * MARGIN, CANVAS_H - 2 * MARGIN)]
-    placed: List[Placed] = []
+    placed_elements: List[elm.Element] = []
 
     # Build component list: at least 1 per class, plus extras
-    comps = CLASSES.copy()
+    comps = CLASSES2.copy()
     extra_n = random.randint(*EXTRA_COMPONENTS_RANGE)
     comps += random.choices(CLASSES, k=extra_n)
     random.shuffle(comps)
-
-    # Place components (no overlap) by consuming free rectangles
-    for cls in comps:
-        base_w, base_h = BOX_SIZES[cls]
-        success = False
-
-        for _try in range(250):
-            angle = random.choice(ORIENTS)
-            w, h = rotated_box_size(base_w, base_h, angle)
-
-            candidates = [fr for fr in free_rects if fr.w >= w and fr.h >= h]
-            if not candidates:
-                break
-            fr = random.choice(candidates)
-
-            x, y = choose_position_in_free(fr, w, h)
-            new_rect = Rect(x, y, w, h)
-
-            if any(rect_intersect(new_rect, p.rect) for p in placed):
-                continue
-
-            placed.append(Placed(cls=cls, rect=new_rect, angle=angle))
-
-            free_rects.remove(fr)
-            free_rects.extend(split_free_rect(fr, new_rect))
-            free_rects = prune_free_rects(free_rects)
-
-            success = True
-            break
-
-        if not success:
-            # Must ensure each class exists at least once
-            if cls in CLASSES and sum(1 for p in placed if p.cls == cls) == 0:
-                raise RuntimeError(
-                    f"Failed to place required class {cls}. Try bigger canvas or smaller boxes."
-                )
-
-    # Guarantee each class at least 1 (double-check)
-    for cls in CLASSES:
-        if not any(p.cls == cls for p in placed):
-            raise RuntimeError(
-                f"Missing required class {cls} after placement. Increase canvas or reduce BOX_SIZES."
-            )
-
-    # -----------------------------
-    # Draw + auto-save using schemdraw official method
-    # -----------------------------
-    # IMPORTANT:
-    # - image_path extension determines output type (.png/.jpg/.pdf/.svg...)
-    # - canvas fixes coordinate system so our unit->pixel mapping is linear
-    #
-    # Some schemdraw versions accept "dpi=" in Drawing(); some don't.
-    # So we avoid passing dpi here, and instead rely on default dpi.
-    # If you want a specific dpi reliably across versions, we can post-process resize.
+    comps.append("swi_real")
 
     d = schemdraw.Drawing(
         file=image_path,
@@ -338,68 +365,45 @@ def generate_one(image_path: str, label_path: str, seed: int = None):
     )
 
     drawn_elements = []
-    rng = random.Random()
-    # Draw components at bbox centers
-    # for p in placed:
-    #     r = p.rect
-    #     cx = r.x + r.w / 2
-    #     cy = r.y + r.h / 2
+    # rng = random.Random()
 
-    #     elem = make_element(p.cls, p.angle).at((cx, cy)).theta(p.angle)
-    #     d += elem
-    #     drawn_elements.append((p.cls, elem))
-    for p in placed:
-        r = p.rect
-        cx = r.x + r.w / 2
-        cy = r.y + r.h / 2
-
-        elem = make_element(p.cls, p.angle).at((cx, cy)).theta(p.angle)
+    for cls in comps:
+        angle = random.choice(ORIENTS)
+        cx, cy = choose_position(placed_elements)
+        elem = make_element(cls, angle).at((cx, cy)).theta(angle)
         d += elem
 
-        cur = {"cls": p.cls, "elem": elem, "rect": r}
-        # 如果要连线：把“当前元件”和“上一个元件”连起来
-        if drawn_elements and (rng.random() < 0.0):
-            prev = drawn_elements[-1]
-
-            # 1) 尝试用 anchor（更像电路图）
-            #   优先：prev 的 end -> cur 的 start
-            p1 = get_world_anchor(prev["elem"], "end")
-            p2 = get_world_anchor(cur["elem"], "start")
-
-            # 2) anchor 不可用就 bbox fallback（朝向对方的边）
-            if p1 is None or p2 is None:
-                cprev = rect_center_r(prev["rect"])
-                ccur = rect_center_r(cur["rect"])
-                p1 = pick_port_on_r_towards(prev["rect"], ccur, rng)
-                p2 = pick_port_on_r_towards(cur["rect"], cprev, rng)
-
-            path = simple_l_path(p1, p2, rng)
-            lw = rng.uniform(0.5, 2.0)
-            draw_wire(d, path, lw)
+        cur = {"cls": cls, "elem": elem}
 
         drawn_elements.append(cur)
+        placed_elements.append(elem)
 
     # Draw wires
     # if needWire:
 
-    # need_wire = rng.random() < 0.5
-    # if need_wire:
-    #     wires_n = random.randint(*WIRES_RANGE)
-    #     for _ in range(wires_n):
-    #         a, b = random.sample(placed, 2)
-    #         p1 = random_point_on_rect_edge(a.rect)
-    #         p2 = random_point_on_rect_edge(b.rect)
-    #         path = l_shaped_path(p1, p2)
+    need_wire = True  # rng.random() < 0.5
+    if need_wire:
+        wires_n = random.randint(*WIRES_RANGE)
+        for _ in range(wires_n):
+            a, b = random.sample(placed_elements, 2)
+            abbox = a.get_bbox(transform=True)
+            bbox = b.get_bbox(transform=True)
+            a_rect = bbox_to_rect(abbox)
+            b_rect = bbox_to_rect(bbox)
+            p1 = random_point_on_rect_edge(a_rect)
+            p2 = random_point_on_rect_edge(b_rect)
+            path = l_shaped_path(p1, p2)
 
-    #         for s in range(len(path) - 1):
-    #             (x1, y1), (x2, y2) = path[s], path[s + 1]
-    #             lw = rng.uniform(0.5, 2)
-    #             d += elm.Line(lw=lw).at((x1, y1)).to((x2, y2))
+            for s in range(len(path) - 1):
+                (x1, y1), (x2, y2) = path[s], path[s + 1]
+                lw = 0.5
+                d += elm.Line(lw=lw).at((x1, y1)).to((x2, y2))
 
     # fig = d.draw(show=False)
     dxmin, dymin, dxmax, dymax = d.get_bbox()
     spanx = dxmax - dxmin
     spany = dymax - dymin
+
     d.save(image_path, transparent=False)  # , dpi=DPI, transparent=False)
     matplotlib.pyplot.close()
 
@@ -414,7 +418,7 @@ def generate_one(image_path: str, label_path: str, seed: int = None):
     for item in drawn_elements:
         cls = item["cls"]
         elem = item["elem"]
-        r = item["rect"]
+        # r = item["rect"]
         xmin, ymin, xmax, ymax = elem.get_bbox(transform=True)
 
         xc = ((xmin + xmax) / 2 - dxmin) / spanx
@@ -431,6 +435,10 @@ def generate_one(image_path: str, label_path: str, seed: int = None):
         cls_id = CLASS2ID[cls]
         yolo_lines.append(f"{cls_id} {xc:.6f} {yc:.6f} {ww:.6f} {hh:.6f}")
 
+    if not yolo_no_overlap(yolo_lines):
+        print("overlap detected")
+        os.remove(image_path)
+        return
     os.makedirs(os.path.dirname(label_path), exist_ok=True)
     with open(label_path, "w", encoding="utf-8") as f:
         f.write("\n".join(yolo_lines))
@@ -468,8 +476,8 @@ def generate_dataset(
 
     for i in range(n_images):
         split = "val" if i in val_set else "train"
-        img_path = os.path.join(out_dir, "images", split, f"s2{i:06d}.png")
-        lab_path = os.path.join(out_dir, "labels", split, f"s2{i:06d}.txt")
+        img_path = os.path.join(out_dir, "images", split, f"s{i}.png")
+        lab_path = os.path.join(out_dir, "labels", split, f"s{i}.txt")
 
         # Different seed per image for reproducibility
         generate_one(img_path, lab_path, seed=seed + i)
@@ -496,6 +504,4 @@ def generate_dataset(
 if __name__ == "__main__":
     # Example:
     # generate_dataset("synthetic_schemdraw_dataset", n_images=500, val_ratio=0.2, seed=42)
-    generate_dataset(
-        "synthetic_schemdraw_dataset_no_wire", n_images=5000, val_ratio=0.1, seed=456
-    )
+    generate_dataset("a6b6", n_images=2000, val_ratio=0.1, seed=7)
