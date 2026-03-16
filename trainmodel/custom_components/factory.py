@@ -577,9 +577,9 @@ def make_component_specific_style(cls: str, style=1):
     if cls == "curr_src":
         return CurrentSourceCustom()  # 正确率1.1，暂时不调整
     if cls == "battery":
-        return BatteryCustom(**sample_battery_params(rng))
+        return BatteryCustom(style=style)  # check
     if cls == "cap":
-        return CapacitorCustom(**sample_capacitor_params(rng))
+        return CapacitorCustom(style=style)  # check
     if cls == "diode":
         return DiodeCustom(**sample_diode_params(rng))
     if cls == "inductor":
@@ -667,11 +667,11 @@ if __name__ == "__main__":
     # r, c = divmod(i, cols)
     # x, y = c * dx, -r * dy
 
-    # elem = make_component_specific_style("ac_src")
+    # elem = make_component_specific_style("battery")
     # d += elem.at((0, 0))
-    for i in range(24):
-        elem = make_component_specific_style("volt_src", i)
-        d += elem.at((2 + i, 2 + i))
+    for i in range(45):
+        elem = make_component_specific_style("cap", i)
+        d += elem.at((2 + i, 0))
     # d += elem.at((0, 0))
     #     elem.label(name, loc="bottom")
 
